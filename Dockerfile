@@ -21,7 +21,6 @@ RUN APP_VERSION=$(ls /app | grep *.jar | awk 'NR==2{split($0,a,"-"); print a[3]}
 EXPOSE 9090
 
 ENV DB_URL=jdbc:postgresql://localhost:5432/multiprodutora
-ENV MAILDEV_URL=localhost
 
 ENV ACTIVE_PROFILE=${PROFILE}
 ENV JAR_VERSION=${APP_VERSION}
