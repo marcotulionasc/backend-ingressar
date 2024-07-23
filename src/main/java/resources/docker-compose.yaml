@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+        POSTGRES_DB: multiprodutora
+        POSTGRES_USER: multi
+        POSTGRES_PASSWORD: multi2024@
+
+
