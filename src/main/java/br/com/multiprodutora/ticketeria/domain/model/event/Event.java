@@ -71,6 +71,8 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<ShoppingCart> shoppingCarts;
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<ConfigEvent> configEvents;
 
 
     public Event(CreateEventDTO data) {

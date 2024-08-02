@@ -1,5 +1,6 @@
 package br.com.multiprodutora.ticketeria.adapters;
 
+import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
@@ -144,5 +145,35 @@ public class TicketController {
         logger.info("Tickets for lot creation listed successfully for tenantId: {} and eventId: {}", tenantId, eventId);
 
         return ResponseEntity.ok(ticketResponses);
+    }
+
+    @Transactional
+    @DeleteMapping("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}")
+    public ResponseEntity<Void> deleteTicket(@PathVariable Long tenantId,
+                                             @PathVariable Long eventId,
+                                             @PathVariable Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> {
+                    logger.error("Ticket not found for ticketId: {}", ticketId);
+                    return new RuntimeException("Ticket not found");
+                });
+        ticketRepository.delete(ticket);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/tenants/{tenantId}/events/{eventId}/ticket/{ticketId}/status")
+    public ResponseEntity<Void> updateTicketStatus(@PathVariable Long tenantId,
+                                                   @PathVariable Long eventId,
+                                                   @PathVariable Long ticketId,
+                                                   @RequestBody Status status) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> {
+                    logger.error("Ticket not found for ticketId: {}", ticketId);
+                    return new RuntimeException("Ticket not found");
+                });
+        ticket.setIsTicketActive(status);
+        ticketRepository.save(ticket);
+        return ResponseEntity.noContent().build();
+
     }
 }

@@ -207,5 +207,27 @@ public class EventController {
         return ResponseEntity.ok(eventDTO);
     }
 
+    @Transactional
+    @DeleteMapping("/tenants/{tenantId}/events/{id}/delete")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long tenantId,
+                                            @PathVariable Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        eventRepository.delete(event);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/tenants/{tenantId}/events/{id}/status")
+    public ResponseEntity<EventDTO> updateEventStatus(@PathVariable Long tenantId,
+                                                      @PathVariable Long id,
+                                                      @RequestBody Status status) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        event.setIsEventActive(status);
+        eventRepository.save(event);
+        EventDTO eventDTO = new EventDTO(event);
+        return ResponseEntity.ok(eventDTO);
+    }
+
 
 }

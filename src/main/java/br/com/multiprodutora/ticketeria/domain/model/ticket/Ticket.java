@@ -34,7 +34,7 @@ public class Ticket {
 
     private LocalDateTime createdAt;
 
-    private AreaTicket areaTicket;
+    private String areaTicket;
 
     @ManyToOne
     @JoinColumn(name = "event_id") // This is the FK
