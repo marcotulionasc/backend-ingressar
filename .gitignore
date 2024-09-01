@@ -37,3 +37,9 @@ eventos/uploads/*.webp
 
 ### VS Code ###
 .vscode/
+
+### Images of uploads ###
+uploads/*.jpg
+uploads/*.jpeg
+uploads/*.png
+uploads/*.webp
