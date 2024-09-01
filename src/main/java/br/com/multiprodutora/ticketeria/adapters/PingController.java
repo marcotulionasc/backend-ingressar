@@ -31,10 +31,6 @@ public class PingController {
 
         @RequestMapping
         public ResponseEntity<String> ping(HttpServletRequest request) {
-                ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/Sao_Paulo"));
-                String formattedDateTime = now.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-                String clientIp = getClientIp(request);
-                log.info("{} - Checked the Ingressar microservice is alive from IP: {}", formattedDateTime, clientIp);
-                return ResponseEntity.ok("checked the Ingressar microservice is alive!");
+                return ResponseEntity.ok("Ingressar API is up!");
         }
 }
