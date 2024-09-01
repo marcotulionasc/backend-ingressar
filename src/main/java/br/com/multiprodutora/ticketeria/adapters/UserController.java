@@ -15,9 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -88,7 +86,7 @@ public class UserController {
 
     @Transactional
     @GetMapping("/tenants/{tenantId}/users")
-    public ResponseEntity<Iterable<User>> listUsersByTenant(@PathVariable Long tenantId) {
+    public ResponseEntity<Iterable<Map<String, Object>>> listUsersByTenant(@PathVariable Long tenantId) {
         logger.info("Received request to list users for tenantId: {}", tenantId);
 
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
@@ -97,7 +95,27 @@ public class UserController {
         });
 
         Iterable<User> users = userRepository.findByTenant(tenant);
+
+        List<Map<String, Object>> response = getMaps(users);
+
         logger.info("Users listed successfully for tenantId: {}", tenantId);
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(response);
     }
+
+    private List<Map<String, Object>> getMaps(Iterable<User> users) {
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (User user : users) {
+            Map<String, Object> userResponse = new HashMap<>();
+            userResponse.put("id", user.getId());
+            userResponse.put("name", user.getName());
+            userResponse.put("email", user.getEmail());
+            String imageUrl = user.getImageProfileBase64() != null
+                    ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64()
+                    : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
+            userResponse.put("imageProfileBase64", imageUrl);
+            response.add(userResponse);
+        }
+        return response;
+    }
+
 }

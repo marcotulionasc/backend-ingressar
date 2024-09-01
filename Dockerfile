@@ -20,9 +20,16 @@ RUN APP_VERSION=$(ls /app | grep *.jar | awk 'NR==2{split($0,a,"-"); print a[3]}
 
 EXPOSE 9090
 
-ENV DB_URL=jdbc:postgresql://localhost:5432/multiprodutora
+ENV DB_URL=jdbc:postgresql://191.205.83.233:5432/multiprodutora
+ENV DB_USER=multi
+ENV DB_PASSWORD=multi2024@
 
 ENV ACTIVE_PROFILE=${PROFILE}
 ENV JAR_VERSION=${APP_VERSION}
 
-CMD java -jar -Dspring.profiles.active=${ACTIVE_PROFILE} -Dspring.datasource.url=${DB_URL} ticketeria-${JAR_VERSION}.jar
+CMD java -jar \
+    -Dspring.profiles.active=${ACTIVE_PROFILE} \
+    -Dspring.datasource.url=${DB_URL} \
+    -Dspring.datasource.username=${DB_USER} \
+    -Dspring.datasource.password=${DB_PASSWORD} \
+    ticketeria-${JAR_VERSION}.jar

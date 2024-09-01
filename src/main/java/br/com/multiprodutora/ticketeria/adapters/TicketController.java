@@ -84,6 +84,47 @@ public class TicketController {
     }
 
     @Transactional
+    @GetMapping("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}")
+    public ResponseEntity<TicketDTO> getTicket(@PathVariable Long tenantId,
+                                               @PathVariable Long eventId,
+                                               @PathVariable Long ticketId) {
+        logger.info("Received request to get ticket for tenantId: {}, eventId: {} and ticketId: {}", tenantId, eventId, ticketId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    logger.error("Tenant not found for tenantId: {}", tenantId);
+                    return new RuntimeException("Tenant not found");
+                });
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> {
+                    logger.error("Event not found for eventId: {}", eventId);
+                    return new RuntimeException("Event not found");
+                });
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> {
+                    logger.error("Ticket not found for ticketId: {}", ticketId);
+                    return new RuntimeException("Ticket not found");
+                });
+
+        TicketDTO ticketDTO = new TicketDTO(
+                ticket.getId(),
+                ticket.getNameTicket(),
+                ticket.getStartDate(),
+                ticket.getEndDate(),
+                ticket.getIsTicketActive(),
+                ticket.getCreatedAt(),
+                ticket.getAreaTicket() // String normal
+        );
+        logger.info("Ticket listed successfully for tenantId: {}, eventId: {} and ticketId: {}", tenantId, eventId, ticketId);
+
+        return ResponseEntity.ok(ticketDTO);
+    }
+
+
+
+    @Transactional
     @GetMapping("/tenants/{tenantId}/events/{eventId}/tickets")
     public ResponseEntity<Iterable<TicketDTO>> getTickets(@PathVariable Long tenantId, @PathVariable Long eventId) {
         logger.info("Received request to list tickets for tenantId: {} and eventId: {}", tenantId, eventId);
