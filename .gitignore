@@ -43,3 +43,6 @@ uploads/*.jpg
 uploads/*.jpeg
 uploads/*.png
 uploads/*.webp
+
+### Archive of .env ###
+.env

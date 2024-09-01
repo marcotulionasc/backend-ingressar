@@ -8,7 +8,7 @@ RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM amazoncorretto:17
-ARG PROFILE=dev
+ARG PROFILE=prod
 ARG APP_VERSION=1.0.0.0
 
 WORKDIR /app
@@ -19,10 +19,6 @@ RUN APP_VERSION=$(ls /app | grep *.jar | awk 'NR==2{split($0,a,"-"); print a[3]}
     && echo "Building container with BSN v-$APP_VERSION"
 
 EXPOSE 9090
-
-ENV DB_URL=jdbc:postgresql://191.205.83.233:5432/multiprodutora
-ENV DB_USER=multi
-ENV DB_PASSWORD=multi2024@
 
 ENV ACTIVE_PROFILE=${PROFILE}
 ENV JAR_VERSION=${APP_VERSION}
