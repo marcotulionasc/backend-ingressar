@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,16 +73,31 @@ public class UserController {
             Map<String, String> response = new HashMap<>();
             response.put("name", user.getName());
             response.put("email", user.getEmail());
+            response.put("imageUrl", user.getImageProfileBase64());
 
-            String imageUrl = user.getImageProfileBase64() != null ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64() : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
-            response.put("imageProfileBase64", imageUrl);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
 
-            return ResponseEntity.ok(response);
-        } else {
-            logger.warn("Incorrect password for user email: {}", data.email());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Incorrect password"));
+            String base64image = "";
+            if(user.getImageProfileBase64() != null){
+                try{
+                    String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
+                    HttpEntity<String> entity = new HttpEntity<>(headers);
+                    ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
+                    byte[] imageBytes = responseImg.getBody();
+                    base64image = Base64.getEncoder().encodeToString(imageBytes);
+                    logger.info("Image upload sucessfully for event id: {}, base64 size: {}");
+
+                    // Aqui é para retornar o objeto inteiro
+                    return ResponseEntity.ok(response);
+                } catch (Exception e){
+                    logger.warn("Incorrect password for user email: {}", data.email());
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Map.of("error", "Incorrect password"));
+                }
+            }
         }
+        return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Transactional
