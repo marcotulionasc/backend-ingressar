@@ -67,13 +67,18 @@ public class UserController {
             return new RuntimeException("User not found");
         });
 
+        String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
+
+
         if (user.getPassword().equals(data.password())) {
             logger.info("Login successful for user email: {}", data.email());
+
+
 
             Map<String, String> response = new HashMap<>();
             response.put("name", user.getName());
             response.put("email", user.getEmail());
-            response.put("imageUrl", user.getImageProfileBase64());
+            response.put("imageUrl", imageUrl);
 
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -81,12 +86,12 @@ public class UserController {
             String base64image = "";
             if(user.getImageProfileBase64() != null){
                 try{
-                    String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
+
                     HttpEntity<String> entity = new HttpEntity<>(headers);
                     ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
                     byte[] imageBytes = responseImg.getBody();
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
-                    logger.info("Image upload sucessfully for event id: {}, base64 size: {}");
+                    logger.info("Imagem exibida com sucesso!");
 
                     // Aqui é para retornar o objeto inteiro
                     return ResponseEntity.ok(response);
