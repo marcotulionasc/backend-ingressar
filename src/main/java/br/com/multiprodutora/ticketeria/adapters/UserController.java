@@ -73,9 +73,8 @@ public class UserController {
         if (user.getPassword().equals(data.password())) {
             logger.info("Login successful for user email: {}", data.email());
 
-
-
             Map<String, String> response = new HashMap<>();
+            response.put("id", String.valueOf(user.getId())); // Tive que colocar em String para devolver pro front
             response.put("name", user.getName());
             response.put("email", user.getEmail());
             response.put("imageUrl", imageUrl);
@@ -93,8 +92,8 @@ public class UserController {
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
                     logger.info("Imagem exibida com sucesso!");
 
-                    // Aqui é para retornar o objeto inteiro
                     return ResponseEntity.ok(response);
+
                 } catch (Exception e){
                     logger.warn("Incorrect password for user email: {}", data.email());
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -120,6 +119,54 @@ public class UserController {
         List<Map<String, Object>> response = getMaps(users);
 
         logger.info("Users listed successfully for tenantId: {}", tenantId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Transactional
+    @GetMapping("/tenants/{tenantId}/users/{userId}")
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long tenantId, @PathVariable Long userId) {
+        logger.info("Received request to get user for tenantId: {} and userId: {}", tenantId, userId);
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
+
+        User user = (User) userRepository.findByIdAndTenant(userId, tenant).orElseThrow(() -> {
+            logger.error("User not found for userId: {}", userId);
+            return new RuntimeException("User not found");
+        });
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        String imageUrl = user.getImageProfileBase64() != null
+                ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64()
+                : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
+        response.put("imageProfileBase64", imageUrl);
+        response.put("password", user.getPassword());
+        response.put("cpf", user.getCpf());
+        response.put("phone", user.getPhone());
+
+        if (user.getAddress() != null) {
+            response.put("street", user.getAddress().getStreet());
+            response.put("neighborhood", user.getAddress().getNeighborhood());
+            response.put("numberAddress", user.getAddress().getNumberAddress());
+            response.put("cep", user.getAddress().getCep());
+            response.put("uf", user.getAddress().getUf());
+            response.put("complement", user.getAddress().getComplement());
+            response.put("city", user.getAddress().getCity());
+        } else {
+            response.put("street", "");
+            response.put("neighborhood", "");
+            response.put("numberAddress", "");
+            response.put("cep", "");
+            response.put("uf", "");
+            response.put("complement", "");
+            response.put("city", "");
+        }
+
         return ResponseEntity.ok(response);
     }
 
