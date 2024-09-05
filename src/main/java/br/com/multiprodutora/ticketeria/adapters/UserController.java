@@ -4,6 +4,7 @@ import br.com.multiprodutora.ticketeria.config.ApiConfig;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.user.User;
 import br.com.multiprodutora.ticketeria.domain.model.user.dto.CreateUserDTO;
+import br.com.multiprodutora.ticketeria.domain.model.user.dto.UpdateUserDTO;
 import br.com.multiprodutora.ticketeria.repository.TenantRepository;
 import br.com.multiprodutora.ticketeria.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -169,6 +170,68 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/tenants/{tenantId}/users/{userId}")
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long tenantId,
+                                                          @PathVariable Long userId,
+                                                          @RequestBody UpdateUserDTO data) {
+        logger.info("Received request to update user for tenantId: {} and userId: {}", tenantId, userId);
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
+
+        User user = (User) userRepository.findByIdAndTenant(userId, tenant).orElseThrow(() -> {
+            logger.error("User not found for userId: {}", userId);
+            return new RuntimeException("User not found");
+        });
+
+        user.setName(data.name());
+        user.setEmail(data.email());
+        user.setPassword(data.password());
+        user.setCpf(data.cpf());
+        user.setPhone(data.phone());
+        user.setImageProfileBase64(data.imageProfileBase64());
+
+        if (data.address() != null) {
+            user.setAddress(data.address());
+        }
+
+        userRepository.save(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("password", user.getPassword());
+        response.put("cpf", user.getCpf());
+        response.put("phone", user.getPhone());
+        response.put("imageProfileBase64", user.getImageProfileBase64());
+
+        if (user.getAddress() != null) {
+            response.put("street", user.getAddress().getStreet());
+            response.put("neighborhood", user.getAddress().getNeighborhood());
+            response.put("numberAddress", user.getAddress().getNumberAddress());
+            response.put("cep", user.getAddress().getCep());
+            response.put("uf", user.getAddress().getUf());
+            response.put("complement", user.getAddress().getComplement());
+            response.put("city", user.getAddress().getCity());
+        } else {
+            response.put("street", "");
+            response.put("neighborhood", "");
+            response.put("numberAddress", "");
+            response.put("cep", "");
+            response.put("uf", "");
+            response.put("complement", "");
+            response.put("city", "");
+        }
+
+        logger.info("User updated data: {}", response);
+        return ResponseEntity.ok(response);
+    }
+
+
 
     private List<Map<String, Object>> getMaps(Iterable<User> users) {
         List<Map<String, Object>> response = new ArrayList<>();
