@@ -1,6 +1,7 @@
 package br.com.multiprodutora.ticketeria.adapters;
 
 import br.com.multiprodutora.ticketeria.config.ApiConfig;
+import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.user.User;
 import br.com.multiprodutora.ticketeria.domain.model.user.dto.CreateUserDTO;
@@ -84,8 +85,8 @@ public class UserController {
             HttpHeaders headers = new HttpHeaders();
 
             String base64image = "";
-            if(user.getImageProfileBase64() != null){
-                try{
+            if (user.getImageProfileBase64() != null) {
+                try {
 
                     HttpEntity<String> entity = new HttpEntity<>(headers);
                     ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
@@ -95,7 +96,7 @@ public class UserController {
 
                     return ResponseEntity.ok(response);
 
-                } catch (Exception e){
+                } catch (Exception e) {
                     logger.warn("Incorrect password for user email: {}", data.email());
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                             .body(Map.of("error", "Incorrect password"));
@@ -149,6 +150,7 @@ public class UserController {
         response.put("password", user.getPassword());
         response.put("cpf", user.getCpf());
         response.put("phone", user.getPhone());
+        response.put("birthDate", user.getBirthDate());
 
         if (user.getAddress() != null) {
             response.put("street", user.getAddress().getStreet());
@@ -177,29 +179,80 @@ public class UserController {
                                                           @RequestBody UpdateUserDTO data) {
         logger.info("Received request to update user for tenantId: {} and userId: {}", tenantId, userId);
 
+        // Buscar o tenant
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
             logger.error("Tenant not found for tenantId: {}", tenantId);
             return new RuntimeException("Tenant not found");
         });
 
+        // Buscar o usuário
         User user = (User) userRepository.findByIdAndTenant(userId, tenant).orElseThrow(() -> {
             logger.error("User not found for userId: {}", userId);
             return new RuntimeException("User not found");
         });
 
-        user.setName(data.name());
-        user.setEmail(data.email());
-        user.setPassword(data.password());
-        user.setCpf(data.cpf());
-        user.setPhone(data.phone());
-        user.setImageProfileBase64(data.imageProfileBase64());
-
-        if (data.address() != null) {
-            user.setAddress(data.address());
+        // Atualizar apenas os campos não-nulos
+        if (data.name() != null) {
+            user.setName(data.name());
+        }
+        if (data.email() != null) {
+            user.setEmail(data.email());
+        }
+        if (data.password() != null) {
+            user.setPassword(data.password());
+        }
+        if (data.cpf() != null) {
+            user.setCpf(data.cpf());
+        }
+        if (data.phone() != null) {
+            user.setPhone(data.phone());
+        }
+        if (data.imageProfileBase64() != null) {
+            user.setImageProfileBase64(data.imageProfileBase64());
+        }
+        if (data.birthDate() != null) {
+            user.setBirthDate(data.birthDate());
         }
 
+        // Manter o createdAt intacto
+        user.setCreatedAt(user.getCreatedAt());
+
+        // Atualizar endereço se existir
+        if (data.address() != null) {
+            Address address = user.getAddress();
+            if (address == null) {
+                address = new Address(); // Criar um novo endereço se o usuário não tiver
+            }
+            if (data.address().getStreet() != null) {
+                address.setStreet(data.address().getStreet());
+            }
+            if (data.address().getNeighborhood() != null) {
+                address.setNeighborhood(data.address().getNeighborhood());
+            }
+            if (data.address().getNumberAddress() != null) {
+                address.setNumberAddress(data.address().getNumberAddress());
+            }
+            if (data.address().getCep() != null) {
+                address.setCep(data.address().getCep());
+            }
+            if (data.address().getUf() != null) {
+                address.setUf(data.address().getUf());
+            }
+            if (data.address().getComplement() != null) {
+                address.setComplement(data.address().getComplement());
+            }
+            if (data.address().getCity() != null) {
+                address.setCity(data.address().getCity());
+            }
+
+            // Setar o endereço atualizado
+            user.setAddress(address);
+        }
+
+        // Salvar o usuário atualizado
         userRepository.save(user);
 
+        // Criar a resposta
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getId());
         response.put("name", user.getName());
@@ -208,6 +261,8 @@ public class UserController {
         response.put("cpf", user.getCpf());
         response.put("phone", user.getPhone());
         response.put("imageProfileBase64", user.getImageProfileBase64());
+        response.put("createdAt", user.getCreatedAt());
+        response.put("birthDate", user.getBirthDate());
 
         if (user.getAddress() != null) {
             response.put("street", user.getAddress().getStreet());
@@ -230,7 +285,6 @@ public class UserController {
         logger.info("User updated data: {}", response);
         return ResponseEntity.ok(response);
     }
-
 
 
     private List<Map<String, Object>> getMaps(Iterable<User> users) {
