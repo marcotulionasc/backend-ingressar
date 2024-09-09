@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,9 +84,7 @@ public class TenantController {
         logger.info("Received request to list all tenants from IP: {}", clientIp);
         List<Tenant> tenants = tenantRepository.findAll();
 
-        List<TenantsDTO> tenantsDTOs = tenants.stream()
-                .map(tenant -> new TenantsDTO(tenant.getId(), tenant.getName(), tenant.getSubdomain(), tenant.getCreatedAt(), tenant.getIsTenantActive()))
-                .collect(Collectors.toList());
+        List<TenantsDTO> tenantsDTOs = tenants.stream().map(tenant -> new TenantsDTO(tenant.getId(), tenant.getName(), tenant.getSubdomain(), tenant.getCreatedAt(), tenant.getIsTenantActive())).collect(Collectors.toList());
 
         logger.info("Listed {} tenants from IP: {}", tenantsDTOs.size(), clientIp);
         return ResponseEntity.ok(tenantsDTOs);

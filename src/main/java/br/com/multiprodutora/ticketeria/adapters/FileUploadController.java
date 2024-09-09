@@ -35,10 +35,8 @@ public class FileUploadController {
             String filePath = storageService.store(file);
             Map<String, String> response = new HashMap<>();
             response.put("filePath", filePath);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("ngrok-skip-browser-warning", "true");
             log.info("Upload realizado com sucesso: {} = {}", response, file.getResource());
-            return ResponseEntity.ok().headers(headers).body(response);
+            return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             log.error("Ocorreu ao fazer um upload na imagem: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

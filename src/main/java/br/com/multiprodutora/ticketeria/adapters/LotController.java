@@ -45,9 +45,12 @@ public class LotController {
                                                   @PathVariable Long ticketId,
                                                   @RequestBody CreateLotDTO data,
                                                   UriComponentsBuilder uriBuilder) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
         Lot lot = new Lot(data);
         lot.setEvent(event);
@@ -56,31 +59,37 @@ public class LotController {
 
         lot = lotRepository.save(lot);
 
-        // Salvar a relação do ticket com o lote
         ticket.setLot(lot);
         ticketRepository.save(ticket);
 
-        // Criar o DTO de resposta com o ID do lote gerado
         CreateLotDTO responseDto = new CreateLotDTO(lot);
 
-        // Retornar a resposta com a URI e o DTO
-        return ResponseEntity.created(uriBuilder.path("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}/lots/{lotId}")
-                        .buildAndExpand(tenantId, eventId, ticketId, lot.getId()).toUri())
-                .body(responseDto);
+        return ResponseEntity.created(uriBuilder
+                .path("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}/lots/{lotId}")
+                .buildAndExpand(
+                        tenantId,
+                        eventId,
+                        ticketId,
+                        lot.getId())
+                .toUri()).body(responseDto);
     }
-
 
     @GetMapping("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}/lots/{lotId}")
     public ResponseEntity<Lot> getLot(@PathVariable Long tenantId,
                                       @PathVariable Long eventId,
                                       @PathVariable Long ticketId,
                                       @PathVariable Long lotId) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
         Lot lot = lotRepository.findById(lotId).orElseThrow(() -> new RuntimeException("Lot not found"));
 
-        if (lot.getEvent().getId() != event.getId() || lot.getTenant().getId() != tenant.getId() || lot.getTicket().getId() != ticket.getId()) {
+        if (lot.getEvent().getId() != event.getId() ||
+                lot.getTenant().getId() != tenant.getId() ||
+                lot.getTicket().getId() != ticket.getId()) {
             throw new RuntimeException("Lot not found");
         }
 
@@ -100,9 +109,14 @@ public class LotController {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        Iterable<Lot> lotsIterable = lotRepository.findAllByEventAndTenantAndTicket(event, tenant, ticket);
+        Iterable<Lot> lotsIterable = lotRepository.findAllByEventAndTenantAndTicket(
+                event,
+                tenant,
+                ticket
+        );
 
-        List<LotDTO> lotDTOs = StreamSupport.stream(lotsIterable.spliterator(), false)
+        List<LotDTO> lotDTOs = StreamSupport
+                .stream(lotsIterable.spliterator(), false)
                 .map(lot -> new LotDTO(
                         lot.getId(),
                         lot.getNameLot(),
@@ -110,8 +124,7 @@ public class LotController {
                         lot.getAmountTicket(),
                         lot.getTaxPriceTicket(),
                         lot.getOrderLot(),
-                        lot.getIsLotActive()
-                ))
+                        lot.getIsLotActive()))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(lotDTOs);
@@ -124,10 +137,14 @@ public class LotController {
                                                   @PathVariable Long ticketId,
                                                   @PathVariable Long lotId,
                                                   CreateLotDTO data) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
-        Lot lot = lotRepository.findById(lotId).orElseThrow(() -> new RuntimeException("Lot not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new RuntimeException("Lot not found"));
 
         lot.setNameLot(data.nameLot());
         lot.setPriceTicket(data.priceTicket());
@@ -151,10 +168,14 @@ public class LotController {
                                                         @PathVariable Long ticketId,
                                                         @PathVariable Long lotId,
                                                         @Valid CreateLotDTO data) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
-        Lot lot = lotRepository.findById(lotId).orElseThrow(() -> new RuntimeException("Lot not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new RuntimeException("Lot not found"));
 
         lot.setIsLotActive(Status.ACTIVE);
 
@@ -171,10 +192,14 @@ public class LotController {
                                                           @PathVariable Long ticketId,
                                                           @PathVariable Long lotId,
                                                           @Valid CreateLotDTO data) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
-        Lot lot = lotRepository.findById(lotId).orElseThrow(() -> new RuntimeException("Lot not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new RuntimeException("Lot not found"));
 
         lot.setIsLotActive(Status.INACTIVE);
 
@@ -190,12 +215,18 @@ public class LotController {
                                                   @PathVariable Long eventId,
                                                   @PathVariable Long ticketId,
                                                   @PathVariable Long lotId) {
-        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> new RuntimeException("Tenant not found"));
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new RuntimeException("Ticket not found"));
-        Lot lot = lotRepository.findById(lotId).orElseThrow(() -> new RuntimeException("Lot not found"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new RuntimeException("Lot not found"));
 
-        if (lot.getEvent().getId() != event.getId() || lot.getTenant().getId() != tenant.getId() || lot.getTicket().getId() != ticket.getId()) {
+        if (lot.getEvent().getId() != event.getId() ||
+                lot.getTenant().getId() != tenant.getId() ||
+                lot.getTicket().getId() != ticket.getId()) {
             throw new RuntimeException("Lot not found");
         }
 

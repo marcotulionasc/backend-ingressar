@@ -48,17 +48,15 @@ public class TicketController {
                                                             UriComponentsBuilder uriBuilder) {
         logger.info("Received request to create ticket for tenantId: {} and eventId: {}", tenantId, eventId);
 
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    logger.error("Event not found for eventId: {}", eventId);
-                    return new RuntimeException("Event not found");
-                });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            logger.error("Event not found for eventId: {}", eventId);
+            return new RuntimeException("Event not found");
+        });
 
         if (!event.getTenant().getId().equals(tenantId)) {
             logger.warn("Permission denied to create ticket for tenantId: {} and eventId: {}", tenantId, eventId);
@@ -79,8 +77,14 @@ public class TicketController {
         response.put("eventId", ticket.getEvent().getId());
         response.put("tenantId", ticket.getTenant().getId());
 
-        return ResponseEntity.created(uriBuilder.path("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}")
-                .buildAndExpand(tenant.getId(), event.getId(), ticket.getId()).toUri()).body(response);
+        return ResponseEntity.created(uriBuilder
+                .path("/tenants/{tenantId}/events/{eventId}/tickets/{ticketId}")
+                .buildAndExpand(
+                        tenant.getId(),
+                        event.getId(),
+                        ticket.getId())
+                .toUri())
+                .body(response);
     }
 
     @Transactional
@@ -90,23 +94,20 @@ public class TicketController {
                                                @PathVariable Long ticketId) {
         logger.info("Received request to get ticket for tenantId: {}, eventId: {} and ticketId: {}", tenantId, eventId, ticketId);
 
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    logger.error("Event not found for eventId: {}", eventId);
-                    return new RuntimeException("Event not found");
-                });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            logger.error("Event not found for eventId: {}", eventId);
+            return new RuntimeException("Event not found");
+        });
 
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> {
-                    logger.error("Ticket not found for ticketId: {}", ticketId);
-                    return new RuntimeException("Ticket not found");
-                });
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> {
+            logger.error("Ticket not found for ticketId: {}", ticketId);
+            return new RuntimeException("Ticket not found");
+        });
 
         TicketDTO ticketDTO = new TicketDTO(
                 ticket.getId(),
@@ -115,43 +116,39 @@ public class TicketController {
                 ticket.getEndDate(),
                 ticket.getIsTicketActive(),
                 ticket.getCreatedAt(),
-                ticket.getAreaTicket() // String normal
+                ticket.getAreaTicket()
         );
         logger.info("Ticket listed successfully for tenantId: {}, eventId: {} and ticketId: {}", tenantId, eventId, ticketId);
 
         return ResponseEntity.ok(ticketDTO);
     }
 
-
-
     @Transactional
     @GetMapping("/tenants/{tenantId}/events/{eventId}/tickets")
-    public ResponseEntity<Iterable<TicketDTO>> getTickets(@PathVariable Long tenantId, @PathVariable Long eventId) {
+    public ResponseEntity<Iterable<TicketDTO>> getTickets(@PathVariable Long tenantId,
+                                                          @PathVariable Long eventId) {
         logger.info("Received request to list tickets for tenantId: {} and eventId: {}", tenantId, eventId);
 
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    logger.error("Event not found for eventId: {}", eventId);
-                    return new RuntimeException("Event not found");
-                });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            logger.error("Event not found for eventId: {}", eventId);
+            return new RuntimeException("Event not found");
+        });
 
-        List<TicketDTO> tickets = ticketRepository.findAllByEventAndTenant(event, tenant).stream()
-                .map(ticket -> new TicketDTO(
+        List<TicketDTO> tickets = ticketRepository.findAllByEventAndTenant(event, tenant)
+                .stream().map(ticket -> new TicketDTO(
                         ticket.getId(),
                         ticket.getNameTicket(),
                         ticket.getStartDate(),
                         ticket.getEndDate(),
                         ticket.getIsTicketActive(),
                         ticket.getCreatedAt(),
-                        ticket.getAreaTicket() // Enum
-                ))
-                .collect(Collectors.toList());
+                        ticket.getAreaTicket()
+        )).collect(Collectors.toList());
         logger.info("Tickets listed successfully for tenantId: {} and eventId: {}", tenantId, eventId);
 
         return ResponseEntity.ok(tickets);
@@ -162,17 +159,15 @@ public class TicketController {
                                                                                     @PathVariable Long eventId) {
         logger.info("Received request to list tickets for lot creation for tenantId: {} and eventId: {}", tenantId, eventId);
 
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    logger.error("Event not found for eventId: {}", eventId);
-                    return new RuntimeException("Event not found");
-                });
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+            logger.error("Event not found for eventId: {}", eventId);
+            return new RuntimeException("Event not found");
+        });
 
         Iterable<Ticket> tickets = ticketRepository.findAllByEventAndTenant(event, tenant);
 
@@ -193,11 +188,10 @@ public class TicketController {
     public ResponseEntity<Void> deleteTicket(@PathVariable Long tenantId,
                                              @PathVariable Long eventId,
                                              @PathVariable Long ticketId) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> {
-                    logger.error("Ticket not found for ticketId: {}", ticketId);
-                    return new RuntimeException("Ticket not found");
-                });
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> {
+            logger.error("Ticket not found for ticketId: {}", ticketId);
+            return new RuntimeException("Ticket not found");
+        });
         ticketRepository.delete(ticket);
         return ResponseEntity.noContent().build();
     }
@@ -207,11 +201,10 @@ public class TicketController {
                                                    @PathVariable Long eventId,
                                                    @PathVariable Long ticketId,
                                                    @RequestBody Status status) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> {
-                    logger.error("Ticket not found for ticketId: {}", ticketId);
-                    return new RuntimeException("Ticket not found");
-                });
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> {
+            logger.error("Ticket not found for ticketId: {}", ticketId);
+            return new RuntimeException("Ticket not found");
+        });
         ticket.setIsTicketActive(status);
         ticketRepository.save(ticket);
         return ResponseEntity.noContent().build();

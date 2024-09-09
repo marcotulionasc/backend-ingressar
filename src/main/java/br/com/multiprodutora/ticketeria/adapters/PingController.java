@@ -13,21 +13,21 @@ import java.sql.Timestamp;;
 @RequestMapping("/ping")
 public class PingController {
 
-        private static final Logger log = LoggerFactory.getLogger(PingController.class);
-        private Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+    private static final Logger log = LoggerFactory.getLogger(PingController.class);
+    private final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-        private String getClientIp(HttpServletRequest request) {
-                String clientIp = request.getHeader("X-Forwarded-For");
-                if (clientIp == null || clientIp.isEmpty()) {
-                        clientIp = request.getRemoteAddr();
-                } else {
-                        clientIp = clientIp.split(",")[0];
-                }
-                return clientIp;
+    private String getClientIp(HttpServletRequest request) {
+        String clientIp = request.getHeader("X-Forwarded-For");
+        if (clientIp == null || clientIp.isEmpty()) {
+            clientIp = request.getRemoteAddr();
+        } else {
+            clientIp = clientIp.split(",")[0];
         }
+        return clientIp;
+    }
 
-        @RequestMapping
-        public ResponseEntity<String> ping(HttpServletRequest request) {
-                return ResponseEntity.ok("Ingressar API is up!");
-        }
+    @RequestMapping
+    public ResponseEntity<String> ping(HttpServletRequest request) {
+        return ResponseEntity.ok("Ingressar API is up!");
+    }
 }

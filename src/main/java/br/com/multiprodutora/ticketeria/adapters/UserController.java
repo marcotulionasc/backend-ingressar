@@ -72,38 +72,48 @@ public class UserController {
         String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
 
 
+        logger.info("User password: {}", user.getPassword());
+        logger.info("Data password: {}", data.password());
+
+        // Verifica se a senha está correta
         if (user.getPassword().equals(data.password())) {
             logger.info("Login successful for user email: {}", data.email());
 
             Map<String, String> response = new HashMap<>();
-            response.put("id", String.valueOf(user.getId())); // Tive que colocar em String para devolver pro front
+            response.put("id", String.valueOf(user.getId()));
             response.put("name", user.getName());
             response.put("email", user.getEmail());
             response.put("imageUrl", imageUrl);
 
+            // Inicializa o RestTemplate para buscar a imagem
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
-
             String base64image = "";
+
             if (user.getImageProfileBase64() != null) {
                 try {
-
                     HttpEntity<String> entity = new HttpEntity<>(headers);
                     ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
                     byte[] imageBytes = responseImg.getBody();
+
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
                     logger.info("Imagem exibida com sucesso!");
 
-                    return ResponseEntity.ok(response);
-
+                    response.put("imageBase64", base64image);
                 } catch (Exception e) {
-                    logger.warn("Incorrect password for user email: {}", data.email());
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Map.of("error", "Incorrect password"));
+
+                    logger.error("Erro ao carregar a imagem do perfil para o email: {}", data.email(), e);
+                    response.put("imageBase64", "");
                 }
+            } else {
+                response.put("imageBase64", "");
             }
+
+            return ResponseEntity.ok(response);
+        } else {
+            logger.warn("Incorrect password for user email: [{}], password: [{}]", data.email(), data.password());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Incorrect password"));
         }
-        return (ResponseEntity<Map<String, String>>) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Transactional
@@ -143,9 +153,7 @@ public class UserController {
         response.put("id", user.getId());
         response.put("name", user.getName());
         response.put("email", user.getEmail());
-        String imageUrl = user.getImageProfileBase64() != null
-                ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64()
-                : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
+        String imageUrl = user.getImageProfileBase64() != null ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64() : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
         response.put("imageProfileBase64", imageUrl);
         response.put("password", user.getPassword());
         response.put("cpf", user.getCpf());
@@ -174,24 +182,19 @@ public class UserController {
     }
 
     @PutMapping("/tenants/{tenantId}/users/{userId}")
-    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long tenantId,
-                                                          @PathVariable Long userId,
-                                                          @RequestBody UpdateUserDTO data) {
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long tenantId, @PathVariable Long userId, @RequestBody UpdateUserDTO data) {
         logger.info("Received request to update user for tenantId: {} and userId: {}", tenantId, userId);
 
-        // Buscar o tenant
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
             logger.error("Tenant not found for tenantId: {}", tenantId);
             return new RuntimeException("Tenant not found");
         });
 
-        // Buscar o usuário
         User user = (User) userRepository.findByIdAndTenant(userId, tenant).orElseThrow(() -> {
             logger.error("User not found for userId: {}", userId);
             return new RuntimeException("User not found");
         });
 
-        // Atualizar apenas os campos não-nulos
         if (data.name() != null) {
             user.setName(data.name());
         }
@@ -221,7 +224,7 @@ public class UserController {
         if (data.address() != null) {
             Address address = user.getAddress();
             if (address == null) {
-                address = new Address(); // Criar um novo endereço se o usuário não tiver
+                address = new Address();
             }
             if (data.address().getStreet() != null) {
                 address.setStreet(data.address().getStreet());
@@ -294,9 +297,7 @@ public class UserController {
             userResponse.put("id", user.getId());
             userResponse.put("name", user.getName());
             userResponse.put("email", user.getEmail());
-            String imageUrl = user.getImageProfileBase64() != null
-                    ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64()
-                    : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
+            String imageUrl = user.getImageProfileBase64() != null ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64() : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
             userResponse.put("imageProfileBase64", imageUrl);
             response.add(userResponse);
         }

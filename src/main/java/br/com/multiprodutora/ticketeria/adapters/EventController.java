@@ -55,9 +55,9 @@ public class EventController {
 
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
         var event = new Event(data);
         event.setTenant(tenant);
@@ -69,8 +69,11 @@ public class EventController {
         response.put("nameEvent", event.getNameEvent());
         response.put("titleEvent", event.getTitleEvent());
 
-        return ResponseEntity.created(uriBuilder.path("/events/{id}")
-                .buildAndExpand(event.getId()).toUri()).body(response);
+        return ResponseEntity.created(uriBuilder
+                .path("/events/{id}")
+                .buildAndExpand(
+                        event.getId())
+                .toUri()).body(response);
     }
 
     @Transactional
@@ -80,11 +83,12 @@ public class EventController {
 
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
-        List<EventDTO> events = tenant.getEvents().stream()
+        List<EventDTO> events = tenant.getEvents()
+                .stream()
                 .map(event -> new EventDTO(
                         event.getId(),
                         event.getNameEvent(),
@@ -98,8 +102,7 @@ public class EventController {
                         event.getImageEvent().toString(),
                         event.getImageFlyer().toString(),
                         event.getIsEventActive(),
-                        event.getAddress().toString()
-                ))
+                        event.getAddress().toString()))
                 .collect(Collectors.toList());
         logger.info("Found {} events for tenantId: {}", events.size(), tenantId);
 
@@ -115,23 +118,27 @@ public class EventController {
 
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
         List<Event> events = tenant.getEvents();
         List<EventSummaryDTO> eventSummaries = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("ngrok-skip-browser-warning", "true");
 
         for (Event event : events) {
             String base64Image = "";
             if (event.getImageEvent() != null) {
                 try {
                     String imageUrl = apiConfig.getApiBaseUrl() + event.getImageEvent();
-                    HttpEntity<String> entity = new HttpEntity<>(headers);
-                    ResponseEntity<byte[]> response = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
+
+                    ResponseEntity<byte[]> response = restTemplate.exchange(
+                            imageUrl,
+                            HttpMethod.GET,
+                            null, // No headers not necessary
+                            byte[].class
+                    );
+
                     byte[] imageBytes = response.getBody();
                     base64Image = Base64.getEncoder().encodeToString(imageBytes);
                     logger.debug("Fetched image for event id: {}, base64 size: {}", event.getId(), base64Image.length());
@@ -148,7 +155,10 @@ public class EventController {
                     event.getTitleEvent(),
                     event.getDate(),
                     event.getIsEventActive(),
-                    event.getAddress().getStreet() + ", " + event.getAddress().getNeighborhood() + " - " + event.getAddress().getCity() + " - " + event.getAddress().getUf(),
+                    event.getAddress().getStreet() + ", " +
+                            event.getAddress().getNeighborhood() + " - " +
+                            event.getAddress().getCity() + " - " +
+                            event.getAddress().getUf(),
                     "data:image/jpeg;base64," + base64Image
             );
             eventSummaries.add(eventSummary);
@@ -167,22 +177,25 @@ public class EventController {
 
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
-                    logger.error("Tenant not found for tenantId: {}", tenantId);
-                    return new RuntimeException("Tenant not found");
-                });
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
 
         List<Event> events = tenant.getEvents();
         List<String> imagePaths = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("ngrok-skip-browser-warning", "true");
 
         for (Event event : events) {
             if (event.getImageFlyer() != null) {
                 try {
                     String imageUrl = apiConfig.getApiBaseUrl() + event.getImageFlyer();
-                    HttpEntity<String> entity = new HttpEntity<>(headers);
-                    ResponseEntity<byte[]> response = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
+                    ResponseEntity<byte[]> response = restTemplate.exchange(
+                            imageUrl,
+                            HttpMethod.GET,
+                            null,
+                            byte[].class
+                    );
+
                     byte[] imageBytes = response.getBody();
                     String base64Image = Base64.getEncoder().encodeToString(imageBytes);
                     imagePaths.add("data:image/jpeg;base64," + base64Image);
@@ -200,7 +213,8 @@ public class EventController {
     }
 
     @GetMapping("/tenants/{tenantId}/events/{id}")
-    public ResponseEntity<EventDTO> infoAboutEventSpecific(@PathVariable Long id, @PathVariable Long tenantId) {
+    public ResponseEntity<EventDTO> infoAboutEventSpecific(@PathVariable Long id,
+                                                           @PathVariable Long tenantId) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
         EventDTO eventDTO = new EventDTO(event);
@@ -228,6 +242,5 @@ public class EventController {
         EventDTO eventDTO = new EventDTO(event);
         return ResponseEntity.ok(eventDTO);
     }
-
 
 }

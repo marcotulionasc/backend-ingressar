@@ -47,9 +47,12 @@ public class ConfigEventController {
         eventRepository.save(event);
 
         return ResponseEntity.created(uriBuilder
-                        .path("/api/tenants/{tenantId}/events/{eventId}/config/{configId}")
-                        .buildAndExpand(tenantId, eventId, configEvent.getId()).toUri())
-                .body(data);
+                .path("/api/tenants/{tenantId}/events/{eventId}/config/{configId}")
+                .buildAndExpand(
+                        tenantId,
+                        eventId,
+                        configEvent.getId())
+                .toUri()).body(data);
     }
 
     @GetMapping("/tenants/{tenantId}/events/{eventId}/config")
@@ -80,7 +83,5 @@ public class ConfigEventController {
 
         return ResponseEntity.ok(data);
     }
-
-
 
 }
