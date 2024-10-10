@@ -65,11 +65,11 @@
 			<version>1.4.14</version>
 		</dependency>
 
-		<!-- Stripe Payments -->
+		<!-- Mercado Payments -->
 		<dependency>
-			<groupId>com.stripe</groupId>
-			<artifactId>stripe-java</artifactId>
-			<version>24.6.0-beta.1</version>
+			<groupId>com.mercadopago</groupId>
+			<artifactId>dx-java</artifactId>
+			<version>1.8.0</version>
 		</dependency>
 
 		<!-- Gson -->
