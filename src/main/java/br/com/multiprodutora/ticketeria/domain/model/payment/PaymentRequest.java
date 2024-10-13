@@ -10,7 +10,7 @@ public class PaymentRequest {
 
     private String eventName;
     private Float ticketPrice;
-    private Integer quantity;
+    private Integer ticketQuantity;
     private String userId;
 
 }

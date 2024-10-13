@@ -17,13 +17,13 @@ public class MercadoPagoController {
 
     @PostMapping("/create-preference")
     public String createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException {
-        MercadoPago.SDK.setAccessToken("TEST-1234567890");
+        MercadoPago.SDK.setAccessToken("APP_USR-8935049088704556-091209-5cb0774e6b3b2c2a3075a992ae117395-254412224");
 
         Preference preference = new Preference();
 
         Item item = new Item();
         item.setTitle(paymentRequest.getEventName())
-                .setQuantity(paymentRequest.getQuantity())
+                .setQuantity(paymentRequest.getTicketQuantity())
                 .setUnitPrice(paymentRequest.getTicketPrice())
                 .setCurrencyId("BRL");
 
