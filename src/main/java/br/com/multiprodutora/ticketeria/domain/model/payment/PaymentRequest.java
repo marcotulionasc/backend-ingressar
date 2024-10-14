@@ -5,12 +5,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PaymentRequest {
+public class    PaymentRequest {
 
 
     private String eventName;
-    private Float ticketPrice;
-    private Integer ticketQuantity;
+    private Float ticketPriceTotal;
+    private Integer buyQuantity;
     private String userId;
 
 }

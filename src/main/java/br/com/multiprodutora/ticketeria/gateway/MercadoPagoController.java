@@ -23,8 +23,8 @@ public class MercadoPagoController {
 
         Item item = new Item();
         item.setTitle(paymentRequest.getEventName())
-                .setQuantity(paymentRequest.getTicketQuantity())
-                .setUnitPrice(paymentRequest.getTicketPrice())
+                .setQuantity(paymentRequest.getBuyQuantity())
+                .setUnitPrice(paymentRequest.getTicketPriceTotal())
                 .setCurrencyId("BRL");
 
         preference.appendItem(item);
