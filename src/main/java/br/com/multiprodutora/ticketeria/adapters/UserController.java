@@ -94,6 +94,13 @@ public class UserController {
                 try {
                     HttpEntity<String> entity = new HttpEntity<>(headers);
                     ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
+
+                    if(responseImg.getStatusCode() != HttpStatus.OK){
+                        logger.error("Imagem não encontrada para o email: {}", data.email());
+                        response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
+                        return ResponseEntity.ok(response);
+                    }
+
                     byte[] imageBytes = responseImg.getBody();
 
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
@@ -103,10 +110,10 @@ public class UserController {
                 } catch (Exception e) {
 
                     logger.error("Erro ao carregar a imagem do perfil para o email: {}", data.email(), e);
-                    response.put("imageBase64", "");
+                    response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
                 }
             } else {
-                response.put("imageBase64", "");
+                response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
             }
 
             return ResponseEntity.ok(response);

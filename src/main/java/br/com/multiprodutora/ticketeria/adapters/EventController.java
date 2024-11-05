@@ -188,6 +188,7 @@ public class EventController {
         for (Event event : events) {
             if (event.getImageFlyer() != null) {
                 try {
+
                     String imageUrl = apiConfig.getApiBaseUrl() + event.getImageFlyer();
                     ResponseEntity<byte[]> response = restTemplate.exchange(
                             imageUrl,
@@ -199,7 +200,7 @@ public class EventController {
                     byte[] imageBytes = response.getBody();
                     String base64Image = Base64.getEncoder().encodeToString(imageBytes);
                     imagePaths.add("data:image/jpeg;base64," + base64Image);
-                    logger.debug("Fetched flyer image for event id: {}, base64 size: {}", event.getId(), base64Image.length());
+
                 } catch (Exception e) {
                     logger.error("Error fetching flyer image for event id: {}", event.getId(), e);
                     imagePaths.add("https://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
