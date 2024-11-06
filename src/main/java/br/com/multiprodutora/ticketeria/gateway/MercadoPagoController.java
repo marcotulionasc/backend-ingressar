@@ -1,22 +1,32 @@
 package br.com.multiprodutora.ticketeria.gateway;
 
+import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentRequest;
+import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
+import br.com.multiprodutora.ticketeria.service.PaymentService;
 import com.mercadopago.MercadoPago;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.Preference;
 import com.mercadopago.resources.datastructures.preference.Item;
 import com.mercadopago.resources.datastructures.preference.BackUrls;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
 
 @RestController
 @RequestMapping("/api/payments")
 public class MercadoPagoController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MercadoPagoController.class);
+
+    @Autowired
+    private PaymentService paymentService;
+
     @PostMapping("/create-preference")
     public String createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException {
+        logger.info("Received payment request for preference creation: " + paymentRequest);
+
         MercadoPago.SDK.setAccessToken("TEST-3207297883527284-083117-715bbfa6ab0c180e5b699cbfb1ef4b54-1671033317");
 
         Preference preference = new Preference();
@@ -31,8 +41,8 @@ public class MercadoPagoController {
 
         BackUrls backUrls = new BackUrls();
         backUrls.setSuccess("http://ingressonaingressar.vercel.app/success.html")
-                .setFailure("http://localhost:8080/failure.html") // Url of test
-                .setPending("http://localhost:8080/pending.html");  // Url of test
+                .setFailure("http://localhost:8080/failure.html")
+                .setPending("http://localhost:8080/pending.html");
 
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
@@ -40,7 +50,19 @@ public class MercadoPagoController {
 
         String userId = paymentRequest.getUserId();
 
-        return preference.getId();
+        logger.info("Preference created with ID: " + preference.getId() + " for user ID: " + userId);
 
+        return preference.getId();
+    }
+
+    @PostMapping("/save")
+    public Payment savePayment(@RequestBody PaymentDTO paymentDto) {
+        logger.info("Received payment data to save: " + paymentDto);
+
+        Payment savedPayment = paymentService.savePayment(paymentDto);
+
+        logger.info("Payment saved successfully with ID: " + savedPayment.getId());
+
+        return savedPayment;
     }
 }

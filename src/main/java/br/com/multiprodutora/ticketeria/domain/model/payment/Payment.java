@@ -2,13 +2,12 @@ package br.com.multiprodutora.ticketeria.domain.model.payment;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
-import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity(name = "Payment")
 @Table(name = "payment")
@@ -23,24 +22,19 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    private String userId;
+    private String userName;
     private String userEmail;
     private Status paymentStatus;
     private LocalDateTime createdAt;
+    private Boolean isTicketActive;
+    private Double totalAmount;
 
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @ManyToOne
-    @JoinColumn(name = "ticket_id")
-    private Ticket ticket;
-
-    @ManyToOne
-    @JoinColumn(name = "lot_id")
-    private Lot lot;
-
-    @ManyToOne
-    @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
-
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "payment_id")
+    private List<Ticket> tickets;
 }

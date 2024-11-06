@@ -5,6 +5,7 @@ import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
@@ -19,4 +20,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     void deleteByTenantId(Long id);
 
+    Collection<Ticket> findAllByEventAndTenantAndAreaTicket(Event event, Tenant tenant, String areaTicket);
 }

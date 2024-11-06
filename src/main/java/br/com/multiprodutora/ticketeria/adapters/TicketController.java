@@ -9,6 +9,7 @@ import br.com.multiprodutora.ticketeria.domain.model.ticket.dto.TicketDTO;
 import br.com.multiprodutora.ticketeria.repository.EventRepository;
 import br.com.multiprodutora.ticketeria.repository.TenantRepository;
 import br.com.multiprodutora.ticketeria.repository.TicketRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,5 +210,35 @@ public class TicketController {
         ticketRepository.save(ticket);
         return ResponseEntity.noContent().build();
 
+    }
+
+    @GetMapping("/tenants/{tenantId}/events/{eventId}/tickets/{areaTicket}")
+    public ResponseEntity<List<TicketDTO>> getTicketsByArea(@PathVariable Long tenantId,
+                                                            @PathVariable Long eventId,
+                                                            @PathVariable String areaTicket) {
+        logger.info("Received request to list tickets by area for tenantId: {}, eventId: {}, areaTicket: {}", tenantId, eventId, areaTicket);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found for ID: " + tenantId));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found for ID: " + eventId));
+
+        List<TicketDTO> tickets = ticketRepository.findAllByEventAndTenantAndAreaTicket(event, tenant, areaTicket)
+                .stream()
+                .map(ticket -> new TicketDTO(
+                        ticket.getId(),
+                        ticket.getNameTicket(),
+                        ticket.getStartDate(),
+                        ticket.getEndDate(),
+                        ticket.getIsTicketActive(),
+                        ticket.getCreatedAt(),
+                        ticket.getAreaTicket()
+                ))
+                .collect(Collectors.toList());
+
+        logger.info("Tickets listed successfully for tenantId: {}, eventId: {}, areaTicket: {}", tenantId, eventId, areaTicket);
+
+        return ResponseEntity.ok(tickets);
     }
 }

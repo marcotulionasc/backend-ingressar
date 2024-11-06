@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface EventRepository extends JpaRepository<Event,Long> {
+public interface EventRepository extends JpaRepository<Event, Long> {
 
     List<Event> findByTenantId(Long tenantId);
 
@@ -15,4 +15,6 @@ public interface EventRepository extends JpaRepository<Event,Long> {
     Event findByIsEventActive(Status status);
 
     void deleteByTenantId(Long id);
+
+    Event findByNameEvent(String nameEvent);
 }
