@@ -6,11 +6,9 @@ import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
+import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
-import br.com.multiprodutora.ticketeria.repository.EventRepository;
-import br.com.multiprodutora.ticketeria.repository.LotRepository;
-import br.com.multiprodutora.ticketeria.repository.PaymentRepository;
-import br.com.multiprodutora.ticketeria.repository.TicketRepository;
+import br.com.multiprodutora.ticketeria.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +21,9 @@ public class PaymentService {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private TenantRepository tenantRepository;
 
     @Autowired
     private EventRepository eventRepository;
@@ -45,6 +46,9 @@ public class PaymentService {
 
         Event event = eventRepository.findByNameEvent(paymentDto.getEventName());
         payment.setEvent(event);
+
+        Tenant tenant = tenantRepository.findById(event.getTenant().getId()).orElse(null);
+        payment.setTenant(tenant);
 
         List<Ticket> tickets = new ArrayList<>();
         for (TicketDTO ticketDto : paymentDto.getSelectedTickets()) {

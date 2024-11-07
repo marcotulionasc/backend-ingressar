@@ -2,6 +2,7 @@ package br.com.multiprodutora.ticketeria.domain.model.payment;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
+import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +34,10 @@ public class Payment {
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
+
+    @ManyToOne
+    @JoinColumn
+    private Tenant tenant;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id")
