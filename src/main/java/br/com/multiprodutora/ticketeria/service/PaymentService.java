@@ -1,12 +1,18 @@
 package br.com.multiprodutora.ticketeria.service;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
+import br.com.multiprodutora.ticketeria.domain.model.config.ConfigEvent;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
+import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
+import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
+import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketPDFDTO;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
+import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import br.com.multiprodutora.ticketeria.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PaymentService {
@@ -29,6 +36,9 @@ public class PaymentService {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private ConfigEventRespository configEventRepository;
 
     @Autowired
     private LotRepository lotRepository;
@@ -70,5 +80,52 @@ public class PaymentService {
 
         return paymentRepository.save(payment);
     }
+
+    public List<TicketPDFDTO> getTicketPDFData(Long paymentId) throws Exception {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new Exception("Pagamento não encontrado"));
+
+        // Desserializar selectedTicketsJson
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TicketDTO> selectedTickets = objectMapper.readValue(
+                payment.getSelectedTicketsJson(),
+                new TypeReference<List<TicketDTO>>() {});
+
+        Event event = payment.getEvent();
+        Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(event.getId());
+
+        // Para cada ingresso selecionado, montar o DTO
+        List<TicketPDFDTO> ticketPDFDTOList = new ArrayList<>();
+        for (TicketDTO selectedTicket : selectedTickets) {
+            Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
+                    .orElseThrow(() -> new Exception("Ingresso não encontrado"));
+
+            // Obter o lote ativo associado ao ingresso
+            Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
+                    .orElseThrow(() -> new Exception("Lote ativo não encontrado"));
+
+            TicketPDFDTO ticketPDFDTO = new TicketPDFDTO(
+                    event.getTitleEvent(),                        // nomeEvento
+                    event.getDate(),                              // dataEvento
+                    event.getHourOfStart(),                       // aberturaPortas
+                    event.getLocal(),                             // localEvento
+                    event.getAddress().toString(),                // enderecoEvento
+                    ticket.getId(),                               // idIngresso
+                    ticket.getNameTicket(),                       // nomeIngresso
+                    ticket.getAreaTicket(),                       // areaIngresso
+                    activeLot.getId(),                            // idLoteAtivo
+                    activeLot.getPriceTicket(),                   // valorLote
+                    activeLot.getAmountTicket(),                  // quantidadeLote
+                    activeLot.getTaxPriceTicket(),                // taxaLote
+                    payment.getCreatedAt().toString(),            // dataCompra
+                    payment.getUserName(),                        // nomeComprador
+                    configEvent.get().getTextThatAppearsOnTheTicketWhenGoToEmail()); // textoNoIngresso
+
+            ticketPDFDTOList.add(ticketPDFDTO);
+        }
+
+        return ticketPDFDTOList;
+    }
+
 
 }

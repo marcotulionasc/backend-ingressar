@@ -5,6 +5,9 @@ import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
 
 
 public interface LotRepository extends JpaRepository<Lot, Long> {
@@ -18,4 +21,8 @@ public interface LotRepository extends JpaRepository<Lot, Long> {
     void deleteAllByEventId(Long id);
 
     void deleteByTenantId(Long id);
+
+    @Query("SELECT l FROM Lot l WHERE l.ticket.id = :ticketId AND l.isLotActive = br.com.multiprodutora.ticketeria.domain.Status.ACTIVE")
+    Optional<Lot> findActiveLotByTicketId(Long ticketId);
+
 }
