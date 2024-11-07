@@ -1,6 +1,7 @@
 package br.com.multiprodutora.ticketeria.adapters;
 
 import br.com.multiprodutora.ticketeria.config.ApiConfig;
+import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.user.User;
@@ -8,6 +9,8 @@ import br.com.multiprodutora.ticketeria.domain.model.user.dto.CreateUserDTO;
 import br.com.multiprodutora.ticketeria.domain.model.user.dto.UpdateUserDTO;
 import br.com.multiprodutora.ticketeria.repository.TenantRepository;
 import br.com.multiprodutora.ticketeria.repository.UserRepository;
+import br.com.multiprodutora.ticketeria.service.JavaSmtpGmailSenderService;
+import br.com.multiprodutora.ticketeria.service.TokenService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -31,6 +34,12 @@ public class UserController {
     private TenantRepository tenantRepository;
 
     @Autowired
+    private JavaSmtpGmailSenderService javaSmtpGmailSenderService;
+
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
     private ApiConfig apiConfig;
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -50,8 +59,36 @@ public class UserController {
         userRepository.save(user);
         logger.info("User created successfully for tenantId: {}", tenantId);
 
+        var token = tokenService.generateToken(user, false);
+
+        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao Ticketeria", "Olá " + user.getName() + ",\n\n" +
+                "Seja bem-vindo ao Ticketeria! Agradecemos por se cadastrar em nossa plataforma.\n\n" +
+                "Atenciosamente,\n" +
+                "Equipe Ticketeria\n" +
+                "Ative sua conta clicando no link: " + apiConfig.getApiBaseUrl() + "/api/tenants/" + tenantId + "/users/" + user.getId() + "/activate?token=" + token);
+
         URI location = uriBuilder.path("/tenants/{tenantId}/users/{userId}").buildAndExpand(tenant.getId(), user.getId()).toUri();
         return ResponseEntity.created(location).body(data);
+    }
+
+    @GetMapping("/tenants/{tenantId}/users/{userId}/activate")
+    public ResponseEntity<Map<String, String>> activateUser(@PathVariable Long tenantId, @PathVariable Long userId, @RequestParam String token) {
+        logger.info("Received request to activate user for tenantId: {} and userId: {}", tenantId, userId);
+
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            logger.error("User not found for userId: {}", userId);
+            return new RuntimeException("User not found");
+        });
+
+        if (tokenService.validateToken(token)) {
+            user.setIsUserActive(Status.ACTIVE);
+            userRepository.save(user);
+            logger.info("User activated successfully for tenantId: {} and userId: {}", tenantId, userId);
+            return ResponseEntity.ok(Map.of("message", "User activated successfully"));
+        } else {
+            logger.error("Invalid token for user activation for tenantId: {} and userId: {}", tenantId, userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid token"));
+        }
     }
 
     @Transactional
@@ -69,8 +106,13 @@ public class UserController {
             return new RuntimeException("User not found");
         });
 
-        String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
+        // TODO: TRATAR EXCEÇÃO DE USUÁRIO NÃO ATIVO
+        if (user.getIsUserActive() != Status.ACTIVE) {
+            logger.error("User is not active for email: {}", data.email());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "User is not active"));
+        }
 
+        String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
 
         logger.info("User password: {}", user.getPassword());
         logger.info("Data password: {}", data.password());

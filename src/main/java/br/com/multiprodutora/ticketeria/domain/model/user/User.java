@@ -53,6 +53,6 @@ public class User {
         this.cpf = data.cpf();
         this.phone = data.phone();
         this.imageProfileBase64 = data.imageProfileBase64();
-        this.isUserActive = Status.ACTIVE; // Business rule, the user is pending until the tenant approves
+        this.isUserActive = Status.PENDING; // Business rule, the user is pending until the tenant approves
     }
 }
