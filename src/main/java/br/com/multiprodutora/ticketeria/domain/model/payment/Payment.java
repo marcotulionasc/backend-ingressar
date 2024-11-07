@@ -42,7 +42,6 @@ public class Payment {
     @JoinColumn
     private Tenant tenant;
 
-    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<PaymentTicket> paymentTickets = new ArrayList<>();
+    @Lob
+    private String selectedTicketsJson;
 }

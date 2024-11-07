@@ -2,13 +2,12 @@ package br.com.multiprodutora.ticketeria.service;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentTicket;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
-import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
-import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import br.com.multiprodutora.ticketeria.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +43,7 @@ public class PaymentService {
         payment.setPaymentStatus(Status.ACTIVE);
         payment.setIsTicketActive(true);
 
-        // Buscar o evento pelo ID (certifique-se de que o PaymentDTO tem o campo eventId)
+        // Buscar o evento pelo ID
         Event event = eventRepository.findById(paymentDto.getEventId()).orElse(null);
         if (event != null) {
             payment.setEvent(event);
@@ -54,29 +53,20 @@ public class PaymentService {
 
         // Obter o tenant
         Tenant tenant = tenantRepository.findById(event.getTenant().getId()).orElse(null);
-        payment.setTenant(tenant);
-
-        // Criar a lista de PaymentTickets
-        List<PaymentTicket> paymentTickets = new ArrayList<>();
-        for (TicketDTO ticketDto : paymentDto.getSelectedTickets()) {
-
-            if (ticketDto.getTicketId() == null) {
-                throw new IllegalArgumentException("Ticket ID cannot be null");
-            }
-
-            Ticket ticket = ticketRepository.findById(ticketDto.getTicketId()).orElse(null);
-            if (ticket != null) {
-                PaymentTicket paymentTicket = new PaymentTicket();
-                paymentTicket.setTicket(ticket);
-                paymentTicket.setPayment(payment);
-                paymentTicket.setQuantity(ticketDto.getQuantity());
-
-                paymentTickets.add(paymentTicket);
-            } else {
-                throw new IllegalArgumentException("Ticket não encontrado com ID: " + ticketDto.getTicketId());
-            }
+        if (tenant != null) {
+            payment.setTenant(tenant);
+        } else {
+            throw new IllegalArgumentException("Tenant não encontrado com ID: " + paymentDto.getTenantId());
         }
-        payment.setPaymentTickets(paymentTickets);
+
+        // Serializar selectedTickets em JSON e armazenar no campo selectedTicketsJson
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String selectedTicketsJson = objectMapper.writeValueAsString(paymentDto.getSelectedTickets());
+            payment.setSelectedTicketsJson(selectedTicketsJson);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Erro ao serializar selectedTickets", e);
+        }
 
         return paymentRepository.save(payment);
     }
