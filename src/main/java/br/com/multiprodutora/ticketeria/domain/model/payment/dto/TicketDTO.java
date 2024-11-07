@@ -10,8 +10,5 @@ public class TicketDTO {
     @JsonProperty("ticketId")
     private Long ticketId;
 
-    @JsonProperty("lotId")
-    private Long lotId;
-
     private Integer quantity;
 }

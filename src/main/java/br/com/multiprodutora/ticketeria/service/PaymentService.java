@@ -53,27 +53,8 @@ public class PaymentService {
             if (ticketDto.getTicketId() == null) {
                 throw new IllegalArgumentException("Ticket ID cannot be null");
             }
-            if (ticketDto.getLotId() == null) {
-                throw new IllegalArgumentException("Lot ID cannot be null");
-            }
 
             Ticket ticket = ticketRepository.findById(ticketDto.getTicketId()).orElse(null);
-            if (ticket != null) {
-                Lot lot = lotRepository.findById(ticketDto.getLotId()).orElse(null);
-                if (lot != null) {
-                    ticket.setLot(lot);
-                    ticket.setEvent(event);
-                    ticket.setIsTicketActive(Status.ACTIVE);
-                    ticket.setCreatedAt(LocalDateTime.now());
-                    tickets.add(ticket);
-                } else {
-                    // Handle the case where lot is null
-                    throw new IllegalArgumentException("Lot not found with ID: " + ticketDto.getLotId());
-                }
-            } else {
-                // Handle the case where ticket is null
-                throw new IllegalArgumentException("Ticket not found with ID: " + ticketDto.getTicketId());
-            }
         }
         payment.setTickets(tickets);
 
