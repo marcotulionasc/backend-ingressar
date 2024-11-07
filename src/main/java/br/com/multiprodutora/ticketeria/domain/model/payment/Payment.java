@@ -8,6 +8,7 @@ import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentTicket;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -42,5 +43,6 @@ public class Payment {
     private Tenant tenant;
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<PaymentTicket> paymentTickets = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package br.com.multiprodutora.ticketeria.domain.model.payment;
 
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class PaymentTicket {
 
     @ManyToOne
     @JoinColumn(name = "payment_id")
+    @JsonBackReference
     private Payment payment;
 
     @ManyToOne
