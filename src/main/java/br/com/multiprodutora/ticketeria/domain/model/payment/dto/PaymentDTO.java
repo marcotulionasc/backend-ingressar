@@ -19,4 +19,18 @@ public class PaymentDTO {
     private String tenantId;
     private Double totalAmount;
     private List<TicketDTO> selectedTickets;
+
+    @Override
+    public String toString() {
+        return "PaymentDTO{" +
+                "userId='" + userId + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", eventId=" + eventId +
+                ", tenantId=" + tenantId +
+                ", totalAmount=" + totalAmount +
+                ", selectedTickets=" + selectedTickets +
+                '}';
+    }
+
 }

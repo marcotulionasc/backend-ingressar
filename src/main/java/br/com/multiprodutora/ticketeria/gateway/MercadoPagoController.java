@@ -11,8 +11,12 @@ import com.mercadopago.resources.datastructures.preference.Item;
 import com.mercadopago.resources.datastructures.preference.BackUrls;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -56,13 +60,19 @@ public class MercadoPagoController {
     }
 
     @PostMapping("/save")
-    public Payment savePayment(@RequestBody PaymentDTO paymentDto) {
+    public ResponseEntity<Map<String, Object>> savePayment(@RequestBody PaymentDTO paymentDto) {
         logger.info("Received payment data to save: " + paymentDto);
 
         Payment savedPayment = paymentService.savePayment(paymentDto);
 
         logger.info("Payment saved successfully with ID: " + savedPayment.getId());
 
-        return savedPayment;
+        // Retornar uma resposta simples sem o objeto Payment completo
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Pagamento salvo com sucesso");
+        response.put("paymentId", savedPayment.getId());
+
+        return ResponseEntity.ok(response);
     }
+
 }
