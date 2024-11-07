@@ -81,7 +81,7 @@ public class Event {
         this.description = data.description();
         this.date = data.date();
         this.createdAt = LocalDateTime.now();
-        this.isEventActive = Status.PENDING; // Business rule
+        this.isEventActive = Status.ACTIVE; // Business rule
         this.imageEvent = data.imageEvent();
         this.local = data.local();
         this.hourOfStart = data.hourOfStart();

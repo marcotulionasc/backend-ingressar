@@ -59,7 +59,7 @@ public class Ticket {
         this.nameTicket = data.nameTicket();
         this.startDate = data.startDate();
         this.endDate = data.endDate();
-        this.isTicketActive = Status.PENDING; // Business rule
+        this.isTicketActive = Status.ACTIVE; // Business rule
         this.createdAt = LocalDateTime.now();
         this.event = data.eventId();
         this.tenant = data.tenantId();

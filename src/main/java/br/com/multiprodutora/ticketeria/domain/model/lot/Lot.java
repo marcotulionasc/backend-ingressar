@@ -51,7 +51,7 @@ public class Lot {
         this.amountTicket = data.amountTicket();
         this.taxPriceTicket = data.taxPriceTicket();
         this.orderLot = data.orderLot();
-        this.isLotActive = Status.PENDING; // Regra de negócio
+        this.isLotActive = Status.ACTIVE; // Regra de negócio
     }
 }
 
