@@ -15,6 +15,8 @@ public class PaymentDTO {
     private String name;
     private String email;
     private String eventName;
+    private Long eventId;
+    private String tenantId;
     private Double totalAmount;
     private List<TicketDTO> selectedTickets;
 }

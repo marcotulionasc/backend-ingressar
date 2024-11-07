@@ -1,14 +1,16 @@
 package br.com.multiprodutora.ticketeria.domain.model.payment;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
+import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentTicket;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
-import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity(name = "Payment")
 @Table(name = "payment")
@@ -39,7 +41,6 @@ public class Payment {
     @JoinColumn
     private Tenant tenant;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "payment_id")
-    private List<Ticket> tickets;
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PaymentTicket> paymentTickets = new ArrayList<>();
 }

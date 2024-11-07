@@ -2,7 +2,7 @@ package br.com.multiprodutora.ticketeria.service;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
+import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentTicket;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
@@ -44,24 +44,41 @@ public class PaymentService {
         payment.setPaymentStatus(Status.ACTIVE);
         payment.setIsTicketActive(true);
 
-        Event event = eventRepository.findByNameEvent(paymentDto.getEventName());
-        payment.setEvent(event);
+        // Buscar o evento pelo ID (certifique-se de que o PaymentDTO tem o campo eventId)
+        Event event = eventRepository.findById(paymentDto.getEventId()).orElse(null);
+        if (event != null) {
+            payment.setEvent(event);
+        } else {
+            throw new IllegalArgumentException("Evento não encontrado com ID: " + paymentDto.getEventId());
+        }
 
+        // Obter o tenant
         Tenant tenant = tenantRepository.findById(event.getTenant().getId()).orElse(null);
         payment.setTenant(tenant);
 
-        List<Ticket> tickets = new ArrayList<>();
+        // Criar a lista de PaymentTickets
+        List<PaymentTicket> paymentTickets = new ArrayList<>();
         for (TicketDTO ticketDto : paymentDto.getSelectedTickets()) {
 
-            // **Add Null Checks for ticketId and lotId**
             if (ticketDto.getTicketId() == null) {
                 throw new IllegalArgumentException("Ticket ID cannot be null");
             }
 
             Ticket ticket = ticketRepository.findById(ticketDto.getTicketId()).orElse(null);
+            if (ticket != null) {
+                PaymentTicket paymentTicket = new PaymentTicket();
+                paymentTicket.setTicket(ticket);
+                paymentTicket.setPayment(payment);
+                paymentTicket.setQuantity(ticketDto.getQuantity());
+
+                paymentTickets.add(paymentTicket);
+            } else {
+                throw new IllegalArgumentException("Ticket não encontrado com ID: " + ticketDto.getTicketId());
+            }
         }
-        payment.setTickets(tickets);
+        payment.setPaymentTickets(paymentTickets);
 
         return paymentRepository.save(payment);
     }
+
 }
