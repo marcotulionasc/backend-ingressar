@@ -127,5 +127,62 @@ public class PaymentService {
         return ticketPDFDTOList;
     }
 
+    // Novo método para Web
+    public List<TicketPDFDTO> getTicketWebData(Long userId) throws Exception {
+        // Buscar todas as Payments do usuário
+        List<Payment> payments = paymentRepository.findByUserId(userId);
 
+        if (payments.isEmpty()) {
+            return new ArrayList<>(); // Retorna lista vazia se não houver pagamentos
+        }
+
+        List<TicketPDFDTO> allTickets = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (Payment payment : payments) {
+            // Desserializar selectedTicketsJson
+            List<TicketDTO> selectedTickets = objectMapper.readValue(
+                    payment.getSelectedTicketsJson(),
+                    new TypeReference<List<TicketDTO>>() {});
+
+            Event event = payment.getEvent();
+            Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(event.getId());
+
+            if (!configEvent.isPresent()) {
+                throw new Exception("Configuração do Evento não encontrada para o evento: " + event.getTitleEvent());
+            }
+
+            for (TicketDTO selectedTicket : selectedTickets) {
+                Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
+                        .orElseThrow(() -> new Exception("Ingresso não encontrado"));
+
+                // Obter o lote ativo associado ao ingresso
+                Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
+                        .orElseThrow(() -> new Exception("Lote ativo não encontrado"));
+
+                TicketPDFDTO ticketPDFDTO = new TicketPDFDTO(
+                        event.getTitleEvent(),                        // nomeEvento
+                        event.getDate(),                              // dataEvento
+                        event.getHourOfStart(),                       // aberturaPortas
+                        event.getLocal(),                             // localEvento
+                        event.getAddress().toString(),                // enderecoEvento
+                        ticket.getId(),                               // idIngresso
+                        ticket.getNameTicket(),                       // nomeIngresso
+                        ticket.getAreaTicket(),                       // areaIngresso
+                        activeLot.getId(),                            // idLoteAtivo
+                        activeLot.getPriceTicket(),                   // valorLote
+                        activeLot.getAmountTicket(),                  // quantidadeLote
+                        activeLot.getTaxPriceTicket(),                // taxaLote
+                        payment.getCreatedAt().toString(),            // dataCompra
+                        payment.getUserName(),                        // nomeComprador
+                        configEvent.get().getTextThatAppearsOnTheTicketWhenGoToEmail() // textoNoIngresso
+                );
+
+                allTickets.add(ticketPDFDTO);
+            }
+        }
+
+        return allTickets;
+    }
 }
+
