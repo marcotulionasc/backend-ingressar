@@ -6,5 +6,6 @@ public enum Status {
     PENDING, // The object is Pending and have to be approved
     CANCELED, // The object is Canceled and can't be used
     DELETED, // The object is Deleted and can't be used
+    AUTHORIZED,
     BLOCKED // The object is Blocked and can't be used
 }

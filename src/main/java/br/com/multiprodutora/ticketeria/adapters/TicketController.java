@@ -41,6 +41,32 @@ public class TicketController {
 
     private static final Logger logger = LoggerFactory.getLogger(TicketController.class);
 
+
+    @PutMapping("/tickets/updateStatus")
+    public ResponseEntity<String> updateStatus(
+            @RequestParam Long ticketId,
+                @RequestParam Status status) {
+
+        // Verificar se o status é válido
+        if (!status.equals(Status.AUTHORIZED) && !status.equals(Status.PENDING)
+                && !status.equals(Status.CANCELED)) {
+            return ResponseEntity.badRequest().body("Status inválido.");
+        }
+
+        // Buscar o ingresso no banco de dados
+        Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
+
+        if (ticket == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Atualizar o campo "status" do ingresso
+        ticket.setIsTicketActive(status);
+        ticketRepository.save(ticket);
+
+        return ResponseEntity.ok("Status do ingresso atualizado com sucesso.");
+    }
+
     @Transactional
     @PostMapping("/tenants/{tenantId}/events/{eventId}/tickets/create")
     public ResponseEntity<Map<String, Object>> createTicket(@PathVariable Long tenantId,
