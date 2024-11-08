@@ -129,8 +129,9 @@ public class PaymentService {
 
     // Novo método para Web
     public List<TicketPDFDTO> getTicketWebData(Long userId) throws Exception {
-        // Buscar todas as Payments do usuário
-        List<Payment> payments = paymentRepository.findByUserId(userId);
+
+        var userIdString = userId.toString();
+        List<Payment> payments = paymentRepository.findByUserId(userIdString);
 
         if (payments.isEmpty()) {
             return new ArrayList<>(); // Retorna lista vazia se não houver pagamentos
