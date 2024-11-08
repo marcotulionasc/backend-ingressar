@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,24 +73,95 @@ public class UserController {
     }
 
     @GetMapping("/tenants/{tenantId}/users/{userId}/activate")
-    public ResponseEntity<Map<String, String>> activateUser(@PathVariable Long tenantId, @PathVariable Long userId, @RequestParam String token) {
+    public ResponseEntity<String> activateUser(
+            @PathVariable Long tenantId,
+            @PathVariable Long userId,
+            @RequestParam String token) {
         logger.info("Received request to activate user for tenantId: {} and userId: {}", tenantId, userId);
 
         User user = userRepository.findById(userId).orElseThrow(() -> {
             logger.error("User not found for userId: {}", userId);
-            return new RuntimeException("User not found");
+            String htmlUserNotFound = """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Usuário Não Encontrado</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+            </head>
+            <body class="bg-gray-100 flex items-center justify-center h-screen">
+                <div class="bg-white p-8 rounded shadow-md text-center">
+                    <h1 class="text-2xl font-bold text-red-600 mb-4">Usuário Não Encontrado</h1>
+                    <p class="mb-6">O usuário que você está tentando ativar não existe.</p>
+                    <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Voltar para Início
+                    </a>
+                </div>
+            </body>
+            </html>
+        """;
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", new RuntimeException(htmlUserNotFound));
         });
 
         if (tokenService.validateToken(token)) {
             user.setIsUserActive(Status.ACTIVE);
             userRepository.save(user);
             logger.info("User activated successfully for tenantId: {} and userId: {}", tenantId, userId);
-            return ResponseEntity.ok(Map.of("message", "User activated successfully"));
+
+            // Definir o conteúdo HTML de sucesso
+            String htmlSuccess = """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Ativação de Usuário</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+            </head>
+            <body class="bg-gray-100 flex items-center justify-center h-screen">
+                <div class="bg-white p-8 rounded shadow-md text-center">
+                    <h1 class="text-3xl font-bold text-green-600 mb-4">Usuário Ativado com Sucesso!</h1>
+                    <p class="mb-6">Obrigado por validar seu e-mail. Agora você pode fazer login.</p>
+                    <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Voltar para Início
+                    </a>
+                </div>
+            </body>
+            </html>
+        """;
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(htmlSuccess);
         } else {
             logger.error("Invalid token for user activation for tenantId: {} and userId: {}", tenantId, userId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Invalid token"));
+
+            // Definir o conteúdo HTML para token inválido
+            String htmlError = """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Ativação de Usuário</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+            </head>
+            <body class="bg-gray-100 flex items-center justify-center h-screen">
+                <div class="bg-white p-8 rounded shadow-md text-center">
+                    <h1 class="text-3xl font-bold text-red-600 mb-4">Token Inválido ou Expirado</h1>
+                    <p class="mb-6">O link de ativação não é válido ou já foi utilizado.</p>
+                    <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Voltar para Início
+                    </a>
+                </div>
+            </body>
+            </html>
+        """;
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(htmlError);
         }
     }
+
 
     @Transactional
     @PostMapping("/tenants/{tenantId}/users/login")
