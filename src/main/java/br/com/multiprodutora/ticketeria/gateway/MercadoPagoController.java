@@ -31,7 +31,7 @@ public class MercadoPagoController {
     public String createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException {
         logger.info("Received payment request for preference creation: " + paymentRequest);
 
-        MercadoPago.SDK.setAccessToken("TEST-3207297883527284-083117-715bbfa6ab0c180e5b699cbfb1ef4b54-1671033317");
+        MercadoPago.SDK.setAccessToken("APP_USR-8935049088704556-091209-5cb0774e6b3b2c2a3075a992ae117395-254412224");
 
         Preference preference = new Preference();
 
