@@ -43,5 +43,6 @@ public class Payment {
     private Tenant tenant;
 
     @Lob
+    @Column(name = "selected_tickets_json")
     private String selectedTicketsJson;
 }

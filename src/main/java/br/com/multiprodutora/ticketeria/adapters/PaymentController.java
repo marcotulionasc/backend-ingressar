@@ -2,6 +2,7 @@ package br.com.multiprodutora.ticketeria.adapters;
 
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketPDFDTO;
 import br.com.multiprodutora.ticketeria.service.PaymentService;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +22,7 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @Transactional
     @GetMapping("/{paymentId}/ticketdata")
     public ResponseEntity<List<TicketPDFDTO>> getTicketPDFData(@PathVariable Long paymentId) {
         try {
@@ -31,6 +33,7 @@ public class PaymentController {
         }
     }
 
+    @Transactional
     @GetMapping("/user/{userId}/ticketdata")
     public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable Long userId) {
         try {
