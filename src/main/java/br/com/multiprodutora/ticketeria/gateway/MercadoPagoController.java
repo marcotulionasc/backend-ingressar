@@ -45,8 +45,8 @@ public class MercadoPagoController {
 
         BackUrls backUrls = new BackUrls();
         backUrls.setSuccess("http://ingressonaingressar.vercel.app/success.html")
-                .setFailure("http://localhost:8080/failure.html")
-                .setPending("http://localhost:8080/pending.html");
+                .setFailure("http://ingressonaingressar.vercel.app/failure.html")
+                .setPending("http://ingressonaingressar.vercel.app/pending.html");
 
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
