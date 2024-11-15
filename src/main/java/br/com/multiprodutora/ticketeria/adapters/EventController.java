@@ -104,7 +104,6 @@ public class EventController {
                         event.getIsEventActive(),
                         event.getAddress().toString()))
                 .collect(Collectors.toList());
-        logger.info("Found {} events for tenantId: {}", events.size(), tenantId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
@@ -141,7 +140,7 @@ public class EventController {
 
                     byte[] imageBytes = response.getBody();
                     base64Image = Base64.getEncoder().encodeToString(imageBytes);
-                    logger.debug("Fetched image for event id: {}, base64 size: {}", event.getId(), base64Image.length());
+
                 } catch (Exception e) {
                     logger.error("Error fetching image for event id: {}", event.getId(), e);
                     base64Image = "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível";
@@ -164,7 +163,6 @@ public class EventController {
             eventSummaries.add(eventSummary);
         }
 
-        logger.info("Listed {} summary events for tenantId: {}", eventSummaries.size(), tenantId);
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Content-Type", "application/json");
         return new ResponseEntity<>(eventSummaries, responseHeaders, HttpStatus.OK);
@@ -209,7 +207,6 @@ public class EventController {
                 imagePaths.add("https://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
             }
         }
-        logger.info("Listed {} flyer images for tenantId: {}", imagePaths.size(), tenantId);
         return ResponseEntity.ok(imagePaths);
     }
 

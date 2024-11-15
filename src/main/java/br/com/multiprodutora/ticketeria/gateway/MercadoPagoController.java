@@ -11,6 +11,7 @@ import com.mercadopago.resources.datastructures.preference.Item;
 import com.mercadopago.resources.datastructures.preference.BackUrls;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -27,11 +28,24 @@ public class MercadoPagoController {
     @Autowired
     private PaymentService paymentService;
 
+    @Value("${mp.token}")
+    private String mercadoPagoAcessToken;
+
+    @Value("${backurl.success}")
+    private String backUrlSuccess;
+
+    @Value("${backurl.failure}")
+    private String backUrlFailure;
+
+    @Value("${backurl.pending}")
+    private String backUrlPending;
+
     @PostMapping("/create-preference")
     public String createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException {
-        logger.info("Received payment request for preference creation: " + paymentRequest);
+        logger.info("Received payment request for preference creation: " + paymentRequest.toString());
+        String userId = paymentRequest.getUserId();
 
-        MercadoPago.SDK.setAccessToken("APP_USR-8935049088704556-091209-5cb0774e6b3b2c2a3075a992ae117395-254412224");
+        MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
 
         Preference preference = new Preference();
 
@@ -44,15 +58,14 @@ public class MercadoPagoController {
         preference.appendItem(item);
 
         BackUrls backUrls = new BackUrls();
-        backUrls.setSuccess("http://ingressonaingressar.vercel.app/success.html")
-                .setFailure("http://ingressonaingressar.vercel.app/failure.html")
-                .setPending("http://ingressonaingressar.vercel.app/pending.html");
+        backUrls.setSuccess(backUrlSuccess)
+                .setFailure(backUrlFailure)
+                .setPending(backUrlPending);
 
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
+        preference.setExternalReference(userId);
         preference.save();
-
-        String userId = paymentRequest.getUserId();
 
         logger.info("Preference created with ID: " + preference.getId() + " for user ID: " + userId);
 
@@ -67,10 +80,9 @@ public class MercadoPagoController {
 
         logger.info("Payment saved successfully with ID: " + savedPayment.getId());
 
-        // Retornar uma resposta simples sem o objeto Payment completo
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Pagamento salvo com sucesso");
-        response.put("paymentId", savedPayment.getId());
+        response.put("Message: ", "Pagamento salvo com sucesso");
+        response.put("Payment ID: ", savedPayment.getId());
 
         return ResponseEntity.ok(response);
     }

@@ -50,7 +50,7 @@ public class PaymentService {
         payment.setUserEmail(paymentDto.getEmail());
         payment.setTotalAmount(paymentDto.getTotalAmount());
         payment.setCreatedAt(LocalDateTime.now());
-        payment.setPaymentStatus(Status.ACTIVE);
+        payment.setPaymentStatus(Status.PENDING);
         payment.setIsTicketActive(true);
 
         // Buscar o evento pelo ID

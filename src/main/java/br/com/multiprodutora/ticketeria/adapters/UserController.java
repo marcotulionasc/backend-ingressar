@@ -117,11 +117,11 @@ public class UserController {
                 <title>Ativação de Usuário</title>
                 <script src="https://cdn.tailwindcss.com"></script>
             </head>
-            <body class="bg-gray-100 flex items-center justify-center h-screen">
-                <div class="bg-white p-8 rounded shadow-md text-center">
-                    <h1 class="text-3xl font-bold text-green-600 mb-4">Usuário Ativado com Sucesso!</h1>
-                    <p class="mb-6">Obrigado por validar seu e-mail. Agora você pode fazer login.</p>
-                    <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            <body class="bg-gray-950 flex items-center justify-center h-screen">
+                <div class="bg-gray-800 p-8 rounded shadow-md text-center">
+                    <h1 class="text-3xl font-bold text-green mb-4">Usuário Ativado com Sucesso!</h1>
+                    <p class="mb-6 text-white">Obrigado por validar seu e-mail. Agora você pode fazer login.</p>
+                    <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
                         Voltar para Início
                     </a>
                 </div>
@@ -135,7 +135,6 @@ public class UserController {
         } else {
             logger.error("Invalid token for user activation for tenantId: {} and userId: {}", tenantId, userId);
 
-            // Definir o conteúdo HTML para token inválido
             String htmlError = """
             <!DOCTYPE html>
             <html lang="pt-BR">
@@ -162,7 +161,6 @@ public class UserController {
         }
     }
 
-
     @Transactional
     @PostMapping("/tenants/{tenantId}/users/login")
     public ResponseEntity<Map<String, String>> login(@PathVariable Long tenantId, @RequestBody CreateUserDTO data) {
@@ -178,7 +176,7 @@ public class UserController {
             return new RuntimeException("User not found");
         });
 
-        // TODO: TRATAR EXCEÇÃO DE USUÁRIO NÃO ATIVO
+        // TODO: Exception tratada, porém será necessário, reenviar e-mail para o usuário ou aumentar tempo de expiração por enquanto
         if (user.getIsUserActive() != Status.ACTIVE) {
             logger.error("User is not active for email: {}", data.email());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "User is not active"));
@@ -189,7 +187,6 @@ public class UserController {
         logger.info("User password: {}", user.getPassword());
         logger.info("Data password: {}", data.password());
 
-        // Verifica se a senha está correta
         if (user.getPassword().equals(data.password())) {
             logger.info("Login successful for user email: {}", data.email());
 
@@ -199,7 +196,6 @@ public class UserController {
             response.put("email", user.getEmail());
             response.put("imageUrl", imageUrl);
 
-            // Inicializa o RestTemplate para buscar a imagem
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
             String base64image = "";
@@ -218,7 +214,7 @@ public class UserController {
                     byte[] imageBytes = responseImg.getBody();
 
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
-                    logger.info("Imagem exibida com sucesso!");
+
 
                     response.put("imageBase64", base64image);
                 } catch (Exception e) {
@@ -251,7 +247,6 @@ public class UserController {
 
         List<Map<String, Object>> response = getMaps(users);
 
-        logger.info("Users listed successfully for tenantId: {}", tenantId);
         return ResponseEntity.ok(response);
     }
 
@@ -338,7 +333,6 @@ public class UserController {
             user.setBirthDate(data.birthDate());
         }
 
-        // Manter o createdAt intacto
         user.setCreatedAt(user.getCreatedAt());
 
         // Atualizar endereço se existir
@@ -369,11 +363,9 @@ public class UserController {
                 address.setCity(data.address().getCity());
             }
 
-            // Setar o endereço atualizado
             user.setAddress(address);
         }
 
-        // Salvar o usuário atualizado
         userRepository.save(user);
 
         // Criar a resposta
@@ -409,7 +401,6 @@ public class UserController {
         logger.info("User updated data: {}", response);
         return ResponseEntity.ok(response);
     }
-
 
     private List<Map<String, Object>> getMaps(Iterable<User> users) {
         List<Map<String, Object>> response = new ArrayList<>();
