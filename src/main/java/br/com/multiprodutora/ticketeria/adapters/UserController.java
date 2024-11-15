@@ -62,7 +62,8 @@ public class UserController {
 
         var token = tokenService.generateToken(user, false);
 
-        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao Ticketeria", "Olá " + user.getName() + ",\n\n" +
+        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao" + tenant.getName() ,
+                "Olá " + user.getName() + ",\n\n" +
                 "Seja bem-vindo ao Ticketeria! Agradecemos por se cadastrar em nossa plataforma.\n\n" +
                 "Atenciosamente,\n" +
                 "Equipe Ticketeria\n" +
