@@ -16,6 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +48,12 @@ public class MercadoPagoController {
         logger.info("Received payment request for preference creation: " + paymentRequest.toString());
         String userId = paymentRequest.getUserId();
 
+        LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
+
+        String createdAtFormatted = createdAt.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+        String externalReference = userId + "_" + createdAtFormatted;
+
         MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
 
         Preference preference = new Preference();
@@ -64,10 +73,10 @@ public class MercadoPagoController {
 
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
-        preference.setExternalReference(userId);
+        preference.setExternalReference(externalReference);
         preference.save();
 
-        logger.info("Preference created with ID: " + preference.getId() + " for user ID: " + userId);
+        logger.info("Preference created with ID: " + preference.getId() + " for external reference: " + externalReference);
 
         return preference.getId();
     }

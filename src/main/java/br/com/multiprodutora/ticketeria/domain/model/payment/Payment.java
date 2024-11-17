@@ -1,14 +1,11 @@
 package br.com.multiprodutora.ticketeria.domain.model.payment;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentTicket;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -45,4 +42,5 @@ public class Payment {
     @Lob
     @Column(name = "selected_tickets_json")
     private String selectedTicketsJson;
+
 }
