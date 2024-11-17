@@ -7,5 +7,21 @@ public enum Status {
     CANCELED, // The object is Canceled and can't be used
     DELETED, // The object is Deleted and can't be used
     AUTHORIZED,
-    BLOCKED // The object is Blocked and can't be used
+    BLOCKED,
+    APPROVED,
+    REJECTED,
+    IN_PROCESS;
+
+    public static Status fromMercadoPagoStatus(String mpStatus) {
+        switch (mpStatus) {
+            case "approved":
+                return APPROVED;
+            case "in_process":
+                return IN_PROCESS;
+            case "rejected":
+                return REJECTED;
+            default:
+                return PENDING;
+        }
+    }
 }

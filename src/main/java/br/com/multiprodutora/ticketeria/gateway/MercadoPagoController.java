@@ -5,6 +5,7 @@ import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentRequest;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
 import br.com.multiprodutora.ticketeria.service.PaymentService;
 import com.mercadopago.MercadoPago;
+import com.mercadopago.exceptions.MPConfException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.Preference;
 import com.mercadopago.resources.datastructures.preference.Item;
@@ -12,6 +13,7 @@ import com.mercadopago.resources.datastructures.preference.BackUrls;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -42,6 +44,9 @@ public class MercadoPagoController {
 
     @Value("${backurl.pending}")
     private String backUrlPending;
+
+    @Value("${mercadopago.notification.url}")
+    private String notificationUrl;
 
     @PostMapping("/create-preference")
     public String createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException {
@@ -74,6 +79,7 @@ public class MercadoPagoController {
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
         preference.setExternalReference(externalReference);
+        preference.setNotificationUrl(notificationUrl);
         preference.save();
 
         logger.info("Preference created with ID: " + preference.getId() + " for external reference: " + externalReference);
@@ -94,6 +100,33 @@ public class MercadoPagoController {
         response.put("Payment ID: ", savedPayment.getId());
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/notifications")
+    public ResponseEntity<String> handleNotification(@RequestBody Map<String, Object> notificationData){
+        logger.info("Received notification data: " + notificationData);
+
+        String topic = (String) notificationData.get("topic"); // Pode ser payment
+        String id = (String) notificationData.get("id");
+
+        if("payment".equals(topic)){
+            try{
+                MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
+                com.mercadopago.resources.Payment payment = com.mercadopago.resources.Payment.findById(id);
+
+                String statusMP = String.valueOf(payment.getStatus());
+                String externalReference = payment.getExternalReference();
+                Double amount = Double.valueOf(payment.getTransactionAmount());
+
+                paymentService.updatePaymentStatus(externalReference, statusMP, amount);
+
+                logger.info("Payment status updated for external reference: " + externalReference + " with status: " + statusMP);
+            } catch (Exception e) {
+                logger.error("Erro ao recuperar informações do pagamento", e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a notificação");
+            }
+        }
+        return ResponseEntity.ok("Notificação recebida com sucesso");
     }
 
 }

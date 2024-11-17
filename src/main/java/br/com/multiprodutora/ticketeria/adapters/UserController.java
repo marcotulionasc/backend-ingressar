@@ -12,6 +12,7 @@ import br.com.multiprodutora.ticketeria.repository.UserRepository;
 import br.com.multiprodutora.ticketeria.service.JavaSmtpGmailSenderService;
 import br.com.multiprodutora.ticketeria.service.TokenService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -62,11 +63,11 @@ public class UserController {
 
         var token = tokenService.generateToken(user, false);
 
-        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao" + tenant.getName() ,
+        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao " + tenant.getName() ,
                 "Olá " + user.getName() + ",\n\n" +
                 "Seja bem-vindo ao Ticketeria! Agradecemos por se cadastrar em nossa plataforma.\n\n" +
                 "Atenciosamente,\n" +
-                "Equipe Ticketeria\n" +
+                "Equipe Ingressar\n" +
                 "Ative sua conta clicando no link: " + apiConfig.getApiBaseUrl() + "/api/tenants/" + tenantId + "/users/" + user.getId() + "/activate?token=" + token);
 
         URI location = uriBuilder.path("/tenants/{tenantId}/users/{userId}").buildAndExpand(tenant.getId(), user.getId()).toUri();
@@ -120,7 +121,7 @@ public class UserController {
             </head>
             <body class="bg-gray-950 flex items-center justify-center h-screen">
                 <div class="bg-gray-800 p-8 rounded shadow-md text-center">
-                    <h1 class="text-3xl font-bold text-green mb-4">Usuário Ativado com Sucesso!</h1>
+                    <h1 class="text-3xl font-bold text-white mb-4">Usuário Ativado com Sucesso!</h1>
                     <p class="mb-6 text-white">Obrigado por validar seu e-mail. Agora você pode fazer login.</p>
                     <a href="https://ingressonaingressar.vercel.app/index.html" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded">
                         Voltar para Início
@@ -213,9 +214,7 @@ public class UserController {
                     }
 
                     byte[] imageBytes = responseImg.getBody();
-
                     base64image = Base64.getEncoder().encodeToString(imageBytes);
-
 
                     response.put("imageBase64", base64image);
                 } catch (Exception e) {

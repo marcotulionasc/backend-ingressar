@@ -53,7 +53,6 @@ public class PaymentService {
         payment.setPaymentStatus(Status.PENDING);
         payment.setIsTicketActive(true);
 
-        // Buscar o evento pelo ID
         Event event = eventRepository.findById(paymentDto.getEventId()).orElse(null);
         if (event != null) {
             payment.setEvent(event);
@@ -61,7 +60,6 @@ public class PaymentService {
             throw new IllegalArgumentException("Evento não encontrado com ID: " + paymentDto.getEventId());
         }
 
-        // Obter o tenant
         Tenant tenant = tenantRepository.findById(event.getTenant().getId()).orElse(null);
         if (tenant != null) {
             payment.setTenant(tenant);
@@ -69,7 +67,6 @@ public class PaymentService {
             throw new IllegalArgumentException("Tenant não encontrado com ID: " + paymentDto.getTenantId());
         }
 
-        // Serializar selectedTickets em JSON e armazenar no campo selectedTicketsJson
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             String selectedTicketsJson = objectMapper.writeValueAsString(paymentDto.getSelectedTickets());
@@ -85,7 +82,6 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new Exception("Pagamento não encontrado"));
 
-        // Desserializar selectedTicketsJson
         ObjectMapper objectMapper = new ObjectMapper();
         List<TicketDTO> selectedTickets = objectMapper.readValue(
                 payment.getSelectedTicketsJson(),
@@ -94,13 +90,11 @@ public class PaymentService {
         Event event = payment.getEvent();
         Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(event.getId());
 
-        // Para cada ingresso selecionado, montar o DTO
         List<TicketPDFDTO> ticketPDFDTOList = new ArrayList<>();
         for (TicketDTO selectedTicket : selectedTickets) {
             Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
                     .orElseThrow(() -> new Exception("Ingresso não encontrado"));
 
-            // Obter o lote ativo associado ao ingresso
             Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
                     .orElseThrow(() -> new Exception("Lote ativo não encontrado"));
 
@@ -127,21 +121,20 @@ public class PaymentService {
         return ticketPDFDTOList;
     }
 
-    // Novo método para Web
     public List<TicketPDFDTO> getTicketWebData(Long userId) throws Exception {
 
         var userIdString = userId.toString();
         List<Payment> payments = paymentRepository.findByUserId(userIdString);
 
         if (payments.isEmpty()) {
-            return new ArrayList<>(); // Retorna lista vazia se não houver pagamentos
+            return new ArrayList<>();
         }
 
         List<TicketPDFDTO> allTickets = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
         for (Payment payment : payments) {
-            // Desserializar selectedTicketsJson
+
             List<TicketDTO> selectedTickets = objectMapper.readValue(
                     payment.getSelectedTicketsJson(),
                     new TypeReference<List<TicketDTO>>() {});
@@ -157,7 +150,6 @@ public class PaymentService {
                 Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
                         .orElseThrow(() -> new Exception("Ingresso não encontrado"));
 
-                // Obter o lote ativo associado ao ingresso
                 Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
                         .orElseThrow(() -> new Exception("Lote ativo não encontrado"));
 
@@ -184,6 +176,20 @@ public class PaymentService {
         }
 
         return allTickets;
+    }
+
+    public void updatePaymentStatus(String externalReference, String status, Double amount){
+        Long paymentId = Long.parseLong(externalReference);
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Pagamento não encontrado com externalReference: " + externalReference));
+
+        payment.setPaymentStatus(Status.valueOf(status.toUpperCase()));
+        payment.setTotalAmount(amount);
+        paymentRepository.save(payment);
+
+        if(payment.getPaymentStatus() == Status.APPROVED){
+            // Depois faço uma lógica para pagamentos aprovados
+        }
     }
 }
 

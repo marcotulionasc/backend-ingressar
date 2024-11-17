@@ -6,6 +6,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 public class JavaSmtpGmailSenderService {
     @Autowired
@@ -13,6 +15,8 @@ public class JavaSmtpGmailSenderService {
 
     @Value("${MAIL_USERNAME}")
     private String senderEmail;
+
+    private final Logger log = Logger.getLogger(JavaSmtpGmailSenderService.class.getName());
 
     public void sendEmail(String toEmail, String subject, String body){
         SimpleMailMessage message = new SimpleMailMessage();
@@ -23,6 +27,6 @@ public class JavaSmtpGmailSenderService {
 
         emailSender.send(message);
 
-        System.out.println("Message sent successfully");
+        log.info("Email enviado para: " + toEmail);
     }
 }
