@@ -12,7 +12,7 @@ public class ValidateTicketController {
     @Autowired
     private TicketService ticketService;
 
-    @GetMapping("/updateStatus")
+    @GetMapping("/updateStatus") // TODO: REVISAR ISSO URGENTEMENTE
     public ResponseEntity<String> updateTicketStatus(
             @RequestParam Long ticketId,
             @RequestParam Status status) {
