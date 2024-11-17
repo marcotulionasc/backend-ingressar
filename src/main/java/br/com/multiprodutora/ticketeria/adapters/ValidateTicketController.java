@@ -13,33 +13,14 @@ public class ValidateTicketController {
     private TicketService ticketService;
 
     @GetMapping("/updateStatus")
-    public ResponseEntity<MessageResponse> updateTicketStatus(
+    public ResponseEntity<String> updateTicketStatus(
             @RequestParam Long ticketId,
             @RequestParam Status status) {
         boolean isUpdated = ticketService.updateStatus(ticketId, status);
         if (isUpdated) {
-            return ResponseEntity.ok(new MessageResponse("Status do ticket atualizado com sucesso."));
+            return ResponseEntity.ok().body("Ingresso validado com sucesso!");
         } else {
-            return ResponseEntity.status(500).body(new MessageResponse("Falha ao atualizar o status do ticket."));
-        }
-    }
-
-    public static class MessageResponse {
-        private String message;
-
-        public MessageResponse() {
-        }
-
-        public MessageResponse(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
+            return ResponseEntity.internalServerError().body("Erro ao validar o ingresso...");
         }
     }
 }
