@@ -78,6 +78,8 @@ public class MercadoPagoController {
 
         preference.setBackUrls(backUrls);
         preference.setAutoReturn(Preference.AutoReturn.valueOf("approved"));
+        preference.setAutoReturn(Preference.AutoReturn.valueOf("pending"));
+        preference.setAutoReturn(Preference.AutoReturn.valueOf("failure"));
         preference.setExternalReference(externalReference);
         preference.setNotificationUrl(notificationUrl);
         preference.save();
@@ -106,13 +108,25 @@ public class MercadoPagoController {
     public ResponseEntity<String> handleNotification(@RequestBody Map<String, Object> notificationData){
         logger.info("Received notification data: " + notificationData);
 
-        String topic = (String) notificationData.get("topic"); // Pode ser payment
-        String id = (String) notificationData.get("id");
+        String topic = (String) notificationData.get("topic");
+        String resource = (String) notificationData.get("resource");
 
-        if("payment".equals(topic)){
-            try{
+        if ("payment".equals(topic)) {
+            try {
+                String id = resource.substring(resource.lastIndexOf("/") + 1);
+
+                if (id.isEmpty()) {
+                    logger.error("ID de pagamento inválido: " + id);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID de pagamento inválido");
+                }
+
                 MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
                 com.mercadopago.resources.Payment payment = com.mercadopago.resources.Payment.findById(id);
+
+                if (payment == null) {
+                    logger.error("Pagamento não encontrado para o ID: " + id);
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pagamento não encontrado");
+                }
 
                 String statusMP = String.valueOf(payment.getStatus());
                 String externalReference = payment.getExternalReference();
@@ -122,11 +136,12 @@ public class MercadoPagoController {
 
                 logger.info("Payment status updated for external reference: " + externalReference + " with status: " + statusMP);
             } catch (Exception e) {
-                logger.error("Erro ao recuperar informações do pagamento", e);
+                logger.error("Erro ao processar a notificação: " + e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a notificação");
             }
         }
         return ResponseEntity.ok("Notificação recebida com sucesso");
     }
+
 
 }
