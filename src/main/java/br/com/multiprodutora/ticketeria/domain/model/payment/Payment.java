@@ -20,8 +20,8 @@ import lombok.*;
 public class Payment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @Column(nullable = false, unique = true)
+    private String id;
 
     private String userId;
     private String userName;

@@ -10,7 +10,7 @@ public enum Status {
     BLOCKED,
     APPROVED,
     REJECTED,
-    IN_PROCESS;
+    IN_PROCESS, UNKNOWN;
 
     public static Status fromMercadoPagoStatus(String mpStatus) {
         switch (mpStatus) {

@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Service
 public class PaymentService {
@@ -42,6 +44,8 @@ public class PaymentService {
 
     @Autowired
     private LotRepository lotRepository;
+
+    private final Logger logger = Logger.getLogger(PaymentService.class.getName());
 
     public Payment savePayment(PaymentDTO paymentDto) {
         Payment payment = new Payment();
@@ -78,7 +82,7 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    public List<TicketPDFDTO> getTicketPDFData(Long paymentId) throws Exception {
+    public List<TicketPDFDTO> getTicketPDFData(String paymentId) throws Exception {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new Exception("Pagamento não encontrado"));
 
@@ -92,7 +96,7 @@ public class PaymentService {
 
         List<TicketPDFDTO> ticketPDFDTOList = new ArrayList<>();
         for (TicketDTO selectedTicket : selectedTickets) {
-            Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
+            Ticket ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()))
                     .orElseThrow(() -> new Exception("Ingresso não encontrado"));
 
             Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
@@ -147,7 +151,7 @@ public class PaymentService {
             }
 
             for (TicketDTO selectedTicket : selectedTickets) {
-                Ticket ticket = ticketRepository.findById(selectedTicket.getTicketId())
+                Ticket ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()))
                         .orElseThrow(() -> new Exception("Ingresso não encontrado"));
 
                 Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
@@ -178,18 +182,45 @@ public class PaymentService {
         return allTickets;
     }
 
-    public void updatePaymentStatus(String externalReference, String status, Double amount){
-        Long paymentId = Long.parseLong(externalReference);
-        Payment payment = paymentRepository.findById(paymentId)
+    public void updatePaymentStatus(String externalReference, String status, Double amount) {
+        if (externalReference == null || externalReference.isEmpty()) {
+            throw new IllegalArgumentException("Referência externa inválida. Deve ser um valor não nulo e não vazio.");
+        }
+
+        Payment payment = paymentRepository.findById(externalReference)
                 .orElseThrow(() -> new IllegalArgumentException("Pagamento não encontrado com externalReference: " + externalReference));
 
-        payment.setPaymentStatus(Status.valueOf(status.toUpperCase()));
-        payment.setTotalAmount(amount);
+        if (status == null || status.isEmpty()) {
+            throw new IllegalArgumentException("Status inválido. Deve ser um valor não nulo e não vazio.");
+        }
+
+        Status paymentStatus;
+        switch (status.toLowerCase()) {
+            case "approved":
+                paymentStatus = Status.APPROVED;
+                break;
+            case "pending":
+                paymentStatus = Status.PENDING;
+                break;
+            case "in_process":
+                paymentStatus = Status.IN_PROCESS;
+                break;
+            case "rejected":
+                paymentStatus = Status.REJECTED;
+                break;
+            default:
+                paymentStatus = Status.UNKNOWN;
+                break;
+        }
+
+        payment.setPaymentStatus(paymentStatus);
+        payment.setTotalAmount(amount != null ? amount : 0.0);
         paymentRepository.save(payment);
 
-        if(payment.getPaymentStatus() == Status.APPROVED){
-            // Depois faço uma lógica para pagamentos aprovados
+        if (payment.getPaymentStatus() == Status.APPROVED) {
+            logger.info("Pagamento aprovado processado com sucesso para ID: " + externalReference);
         }
     }
+
 }
 

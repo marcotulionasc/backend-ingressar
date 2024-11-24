@@ -26,7 +26,7 @@ public class PaymentController {
     @GetMapping("/{paymentId}/ticketdata")
     public ResponseEntity<List<TicketPDFDTO>> getTicketPDFData(@PathVariable Long paymentId) {
         try {
-            List<TicketPDFDTO> ticketPDFData = paymentService.getTicketPDFData(paymentId);
+            List<TicketPDFDTO> ticketPDFData = paymentService.getTicketPDFData(String.valueOf(paymentId));
             return ResponseEntity.ok(ticketPDFData);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
