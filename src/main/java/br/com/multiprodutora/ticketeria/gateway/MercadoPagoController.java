@@ -1,20 +1,17 @@
 package br.com.multiprodutora.ticketeria.gateway;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
-import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.PaymentRequest;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.PaymentDTO;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
-import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
-import br.com.multiprodutora.ticketeria.domain.model.user.User;
 import br.com.multiprodutora.ticketeria.repository.EventRepository;
 import br.com.multiprodutora.ticketeria.repository.PaymentRepository;
 import br.com.multiprodutora.ticketeria.repository.TicketRepository;
 import br.com.multiprodutora.ticketeria.repository.UserRepository;
+import br.com.multiprodutora.ticketeria.service.ExternalReferenceService;
 import br.com.multiprodutora.ticketeria.service.PaymentService;
-import br.com.multiprodutora.ticketeria.service.TicketService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mercadopago.MercadoPago;
@@ -29,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -57,6 +55,9 @@ public class MercadoPagoController {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private ExternalReferenceService externalReferenceService;
+
     @Value("${mp.token}")
     private String mercadoPagoAcessToken;
 
@@ -73,8 +74,8 @@ public class MercadoPagoController {
     private String notificationUrl;
 
     @PostMapping("/create-preference")
-    public ResponseEntity<Map<String, String>> createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException, JsonProcessingException, JsonProcessingException {
-        logger.info("Received payment request for preference creation: " + paymentRequest.toString());
+    public ResponseEntity<Map<String, String>> createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException, IOException {
+        logger.info("Received payment request for preference creation: {}", paymentRequest.toString());
 
         if (paymentRequest.getUserId() == null || paymentRequest.getUserId().isEmpty()) {
             logger.error("User ID is null or empty");
@@ -131,7 +132,16 @@ public class MercadoPagoController {
         preference.setNotificationUrl(notificationUrl);
         preference.save();
 
-        logger.info("Preference created with ID: " + preference.getId() + " for external reference: " + externalReference);
+        logger.info("Preference created with ID: [{}] for external reference: [{}]", preference.getId(), externalReference);
+
+        // String status = externalReferenceService.checkPaymentStatus(externalReference);
+
+        // if ("approved".equalsIgnoreCase(status)) {
+           // logger.info("Payment approved for externalReference: [{}]", externalReference);
+        // } else {
+           // logger.warn("Payment pending or rejected [{}], Status: [{}]",
+             //       externalReference, status);
+        //}
 
         Payment payment = new Payment();
         payment.setId(externalReference);
@@ -141,8 +151,8 @@ public class MercadoPagoController {
         payment.setPaymentStatus(Status.PENDING);
         payment.setCreatedAt(createdAt);
         payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
-        payment.setEvent(payment.getEvent());
-        payment.setTenant(payment.getTenant());
+        payment.setEventId(paymentRequest.getEventId());
+        payment.setTenantId(paymentRequest.getTenantId());
         payment.setIsTicketActive(false); // :TODO when the QR Code is scanned, this field should be updated to true
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -158,14 +168,14 @@ public class MercadoPagoController {
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> savePayment(@RequestBody PaymentDTO paymentDto) {
-        logger.info("Received payment data to save: " + paymentDto);
+        logger.info("Received payment data to save: {}", paymentDto);
 
         Payment savedPayment = paymentService.savePayment(paymentDto);
 
-        logger.info("Payment saved successfully with ID: " + savedPayment.getId());
+        logger.info("Payment saved successfully with ID: {}", savedPayment.getId());
 
         Map<String, Object> response = new HashMap<>();
-        response.put("Message: ", "Pagamento salvo com sucesso");
+        response.put("Message: ", "Payment saved successfully!");
         response.put("Payment ID: ", savedPayment.getId());
 
         return ResponseEntity.ok(response);
@@ -173,7 +183,7 @@ public class MercadoPagoController {
 
     @PostMapping("/notifications")
     public ResponseEntity<String> handleNotification(@RequestParam("topic") String topic, @RequestParam("id") String id) {
-        logger.info("Received notification: topic=" + topic + ", id=" + id);
+        logger.info("Received notification: topic={}, id={}", topic, id);
 
         if ("payment".equals(topic)) {
             try {
@@ -186,7 +196,7 @@ public class MercadoPagoController {
                 com.mercadopago.resources.Payment payment = com.mercadopago.resources.Payment.findById(id);
 
                 if (payment == null) {
-                    logger.error("Pagamento não encontrado para o ID: " + id);
+                    logger.error("Pagamento não encontrado para o ID: {}", id);
                     return ResponseEntity.ok("Pagamento não encontrado");
                 }
 
@@ -197,22 +207,19 @@ public class MercadoPagoController {
 
                 paymentService.updatePaymentStatus(externalReference, statusMP, amount);
 
-                logger.info("Status do pagamento atualizado para referência externa: " + externalReference + " com status: " + statusMP);
+                logger.info("Status do pagamento atualizado para referência externa: {} com status: {}", externalReference, statusMP);
             } catch (Exception e) {
                 logger.error("Erro ao processar a notificação", e);
 
                 return ResponseEntity.ok("Erro ao processar a notificação");
             }
         } else {
-            logger.warn("Tópico não suportado ou ID inválido: topic=" + topic + ", id=" + id);
+            logger.warn("Tópico não suportado ou ID inválido: topic={}, id={}", topic, id);
 
             return ResponseEntity.ok("Tópico não suportado");
         }
 
         return ResponseEntity.ok("Notificação recebida com sucesso");
     }
-
-
-
 
 }

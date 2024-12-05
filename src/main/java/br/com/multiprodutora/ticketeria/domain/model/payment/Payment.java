@@ -36,11 +36,16 @@ public class Payment {
     private Event event;
 
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "tenant_id")
     private Tenant tenant;
 
     @Lob
     @Column(name = "selected_tickets_json")
     private String selectedTicketsJson;
 
+    public void setEventId(Long eventId) {
+    }
+
+    public void setTenantId(String tenantId) {
+    }
 }

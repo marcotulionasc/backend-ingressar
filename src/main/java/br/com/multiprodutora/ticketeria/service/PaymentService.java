@@ -220,6 +220,8 @@ public class PaymentService {
         if (payment.getPaymentStatus() == Status.APPROVED) {
             logger.info("Pagamento aprovado processado com sucesso para ID: " + externalReference);
         }
+
+
     }
 
 }

@@ -51,6 +51,21 @@ public class TokenService {
         }
     }
 
+    public String getEmailFromToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer("auth0")
+                    .build();
+            DecodedJWT decodedJWT = verifier.verify(token);
+            return decodedJWT.getSubject(); // O email está armazenado no subject
+        } catch (JWTVerificationException ex) {
+            log.error("Erro ao obter email do token", ex);
+            return null;
+        }
+    }
+
+
     private Date generateExpirationDate(boolean isLogin) {
         LocalDateTime expirationTime = isLogin ? LocalDateTime.now().plusDays(30) : LocalDateTime.now().plusMinutes(15);
         return Date.from(expirationTime.atZone(ZoneId.systemDefault()).toInstant());
