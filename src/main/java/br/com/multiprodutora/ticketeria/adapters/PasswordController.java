@@ -102,7 +102,7 @@ public class PasswordController {
         String resetToken = tokenService.generateToken(user, false); // Passar o segundo parâmetro 'false'
 
         // Enviar email com o link de redefinição
-        String resetLink = String.format("https://seu-dominio.com/tenants/%d/users/reset-password?token=%s", tenantId, resetToken);
+        String resetLink = String.format("https://backend-ingressar.onrender.com/tenants/%d/users/reset-password?token=%s", tenantId, resetToken);
         String subject = "Redefinição de Senha";
         String body = "Clique no link para redefinir sua senha:\n" + resetLink;
         emailService.sendEmail(user.getEmail(), subject, body);
@@ -152,7 +152,7 @@ public class PasswordController {
                 <div class="bg-gray-800 p-8 rounded shadow-md text-center w-full max-w-md">
                     <h1 class="text-2xl font-bold text-red-600 mb-4">Token Inválido ou Expirado</h1>
                     <p class="mb-6 text-white">O link de redefinição não é válido ou já foi utilizado.</p>
-                    <a href="/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
+                    <a href="https://backend-ingressar.onrender.com/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
                         Solicitar Novo Link
                     </a>
                 </div>
@@ -175,7 +175,7 @@ public class PasswordController {
         <body class="bg-gray-900 flex items-center justify-center min-h-screen">
             <div class="bg-gray-800 p-8 rounded shadow-md text-center w-full max-w-md">
                 <h1 class="text-3xl font-bold text-white mb-6">Criar Nova Senha</h1>
-                <form action="/tenants/%d/users/reset-password" method="post">
+                <form action="https://backend-ingressar.onrender.com/tenants/%d/users/reset-password" method="post">
                     <input type="hidden" name="token" value="%s">
                     <input type="password" name="newPassword" placeholder="Nova Senha" required
                         class="w-full p-3 mb-4 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600">
@@ -216,7 +216,7 @@ public class PasswordController {
                 <div class="bg-gray-800 p-8 rounded shadow-md text-center w-full max-w-md">
                     <h1 class="text-2xl font-bold text-red-600 mb-4">Token Inválido ou Expirado</h1>
                     <p class="mb-6 text-white">O link de redefinição não é válido ou já foi utilizado.</p>
-                    <a href="/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
+                    <a href="https://backend-ingressar.onrender.com/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
                         Solicitar Novo Link
                     </a>
                 </div>
@@ -241,7 +241,7 @@ public class PasswordController {
                 <div class="bg-gray-800 p-8 rounded shadow-md text-center w-full max-w-md">
                     <h1 class="text-2xl font-bold text-red-600 mb-4">As Senhas Não Coincidem</h1>
                     <p class="mb-6 text-white">Por favor, certifique-se de que as senhas inseridas são iguais.</p>
-                    <a href="/tenants/%d/users/reset-password?token=%s" class="text-blue-500 hover:underline">
+                    <a href="https://backend-ingressar.onrender.com/tenants/%d/users/reset-password?token=%s" class="text-blue-500 hover:underline">
                         Tentar Novamente
                     </a>
                 </div>
@@ -270,7 +270,7 @@ public class PasswordController {
                 <div class="bg-gray-800 p-8 rounded shadow-md text-center w-full max-w-md">
                     <h1 class="text-2xl font-bold text-red-600 mb-4">Token Inválido ou Expirado</h1>
                     <p class="mb-6 text-white">O link de redefinição não é válido ou já foi utilizado.</p>
-                    <a href="/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
+                    <a href="https://backend-ingressar.onrender.com/tenants/%d/users/forgot-password" class="text-blue-500 hover:underline">
                         Solicitar Novo Link
                     </a>
                 </div>
