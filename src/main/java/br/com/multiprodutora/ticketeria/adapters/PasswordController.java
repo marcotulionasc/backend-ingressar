@@ -253,7 +253,6 @@ public class PasswordController {
                     .body(htmlError);
         }
 
-        // Obter o email a partir do token
         String email = tokenService.getEmailFromToken(token); // Método que precisamos adicionar
 
         if (email == null || email.isEmpty()) {
@@ -286,6 +285,9 @@ public class PasswordController {
             logger.error("User not found for email: {}", email);
             return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         });
+
+
+        user.setPassword(newPassword);
 
         userRepository.save(user);
 
