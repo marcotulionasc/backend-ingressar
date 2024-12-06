@@ -26,10 +26,11 @@ public class Payment {
     private String userId;
     private String userName;
     private String userEmail;
-    private Status paymentStatus;
+    private Status status;
     private LocalDateTime createdAt;
     private Boolean isTicketActive;
     private Double totalAmount;
+    private Boolean isTicketsSent;
 
     @ManyToOne
     @JoinColumn(name = "event_id")

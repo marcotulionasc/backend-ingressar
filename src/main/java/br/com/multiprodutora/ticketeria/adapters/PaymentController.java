@@ -39,7 +39,7 @@ public class PaymentController {
         try {
             List<TicketPDFDTO> ticketWebData = paymentService.getTicketWebData(userId);
             if (ticketWebData.isEmpty()) {
-                return ResponseEntity.ok().body(ticketWebData); // Retorna lista vazia
+                return ResponseEntity.ok().body(ticketWebData);
             }
             return ResponseEntity.ok(ticketWebData);
         } catch (Exception e) {

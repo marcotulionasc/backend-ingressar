@@ -54,7 +54,7 @@ public class PaymentService {
         payment.setUserEmail(paymentDto.getEmail());
         payment.setTotalAmount(paymentDto.getTotalAmount());
         payment.setCreatedAt(LocalDateTime.now());
-        payment.setPaymentStatus(Status.PENDING);
+        payment.setStatus(Status.PENDING);
         payment.setIsTicketActive(true);
 
         Event event = eventRepository.findById(paymentDto.getEventId()).orElse(null);
@@ -213,11 +213,11 @@ public class PaymentService {
                 break;
         }
 
-        payment.setPaymentStatus(paymentStatus);
+        payment.setStatus(paymentStatus);
         payment.setTotalAmount(amount != null ? amount : 0.0);
         paymentRepository.save(payment);
 
-        if (payment.getPaymentStatus() == Status.APPROVED) {
+        if (payment.getStatus() == Status.APPROVED) {
             logger.info("Pagamento aprovado processado com sucesso para ID: " + externalReference);
         }
 

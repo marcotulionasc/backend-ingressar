@@ -113,7 +113,7 @@ public class MercadoPagoController {
 
             String customTitle = paymentRequest.getEventName() + " - " + ticket.get().getAreaTicket() + " - " + ticket.get().getNameTicket();
 
-            item.setTitle(ticket.get().getAreaTicket())
+            item.setTitle(customTitle)
                     .setQuantity(selectedTicket.getQuantity())
                     .setUnitPrice(Float.valueOf(ticket.get().getLot().getPriceTicket()))
                     .setCurrencyId("BRL");
@@ -148,7 +148,7 @@ public class MercadoPagoController {
         payment.setUserId(userId);
         payment.setUserName(userName);
         payment.setUserEmail(userEmail);
-        payment.setPaymentStatus(Status.PENDING);
+        payment.setStatus(Status.PENDING);
         payment.setCreatedAt(createdAt);
         payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
         payment.setEventId(paymentRequest.getEventId());
