@@ -46,34 +46,107 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
+    @Transactional
     @PostMapping("/tenants/{tenantId}/user/create")
-    public ResponseEntity<CreateUserDTO> createUser(@PathVariable Long tenantId, @RequestBody CreateUserDTO data, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<Map<String, String>> createUser(
+            @PathVariable Long tenantId,
+            @RequestBody CreateUserDTO data,
+            UriComponentsBuilder uriBuilder) {
         logger.info("Received request to create user for tenantId: {}", tenantId);
+
+        if (data.email() == null || data.email().isEmpty()) {
+            logger.error("Email é obrigatório.");
+            return ResponseEntity.badRequest().body(Map.of("error", "Email é obrigatório."));
+        }
+        if (data.password() == null || data.password().isEmpty()) {
+            logger.error("Senha é obrigatória.");
+            return ResponseEntity.badRequest().body(Map.of("error", "Senha é obrigatória."));
+        }
+        if (data.name() == null || data.name().isEmpty()) {
+            logger.error("Nome é obrigatório.");
+            return ResponseEntity.badRequest().body(Map.of("error", "Nome é obrigatório."));
+        }
 
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
             logger.error("Tenant not found for tenantId: {}", tenantId);
-            return new RuntimeException("Tenant not found");
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant não encontrado");
         });
 
-        User user = new User(data);
-        user.setTenant(tenant);
+        Optional<User> optionalUser = userRepository.findByEmail(data.email());
+        if (optionalUser.isPresent()) {
+            User existingUser = optionalUser.get();
+            Status status = existingUser.getIsUserActive();
 
+            if (status == Status.PENDING) {
+                logger.warn("Tentativa de cadastro com email pendente: {}", data.email());
+
+                String token = tokenService.generateToken(existingUser, false);
+                try {
+                    javaSmtpGmailSenderService.sendEmail(
+                            existingUser.getEmail(),
+                            "Bem-vindo ao " + tenant.getName(),
+                            "Olá " + existingUser.getName() + ",\n\n" +
+                                    "Parece que você já iniciou o cadastro em nossa plataforma.\n" +
+                                    "Por favor, ative sua conta clicando no link: " +
+                                    apiConfig.getApiBaseUrl() + "/api/tenants/" + tenantId + "/users/" + existingUser.getId() + "/activate?token=" + token + "\n\n" +
+                                    "Atenciosamente,\n" +
+                                    "Equipe Ingressar"
+                    );
+                    logger.info("Email de ativação reenviado para: {}", existingUser.getEmail());
+                } catch (Exception e) {
+                    logger.error("Erro ao reenviar email de ativação para: {}", existingUser.getEmail(), e);
+                }
+
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "Email já cadastrado e pendente de validação. Verifique seu email para ativar a conta."
+                ));
+            } else if (status == Status.ACTIVE) {
+                logger.warn("Tentativa de cadastro com email ativo: {}", data.email());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "Email já cadastrado e ativo. Por favor, faça login."
+                ));
+            } else {
+                logger.warn("Tentativa de cadastro com email de status desconhecido: {}", data.email());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", "Email já cadastrado com status desconhecido. Por favor, entre em contato com o suporte."
+                ));
+            }
+        }
+
+        User user = new User();
+        user.setEmail(data.email());
+        user.setName(data.name());
+        user.setPassword(data.password());
+        user.setTenant(tenant);
+        user.setIsUserActive(Status.PENDING);
         userRepository.save(user);
         logger.info("User created successfully for tenantId: {}", tenantId);
 
-        var token = tokenService.generateToken(user, false);
+        String token = tokenService.generateToken(user, false);
 
-        javaSmtpGmailSenderService.sendEmail(user.getEmail(), "Bem-vindo ao " + tenant.getName() ,
-                "Olá " + user.getName() + ",\n\n" +
-                "Seja bem-vindo ao Ticketeria! Agradecemos por se cadastrar em nossa plataforma.\n\n" +
-                "Atenciosamente,\n" +
-                "Equipe Ingressar\n" +
-                "Ative sua conta clicando no link: " + apiConfig.getApiBaseUrl() + "/api/tenants/" + tenantId + "/users/" + user.getId() + "/activate?token=" + token);
+        try {
+            javaSmtpGmailSenderService.sendEmail(
+                    user.getEmail(),
+                    "Bem-vindo ao " + tenant.getName(),
+                    "Olá " + user.getName() + ",\n\n" +
+                            "Seja bem-vindo ao Ticketeria! Agradecemos por se cadastrar em nossa plataforma.\n\n" +
+                            "Atenciosamente,\n" +
+                            "Equipe Ingressar\n\n" +
+                            "Ative sua conta clicando no link: " +
+                            apiConfig.getApiBaseUrl() + "/api/tenants/" + tenantId + "/users/" + user.getId() + "/activate?token=" + token
+            );
+            logger.info("Email de ativação enviado para: {}", user.getEmail());
+        } catch (Exception e) {
+            logger.error("Erro ao enviar email de ativação para: {}", user.getEmail(), e);
+        }
 
-        URI location = uriBuilder.path("/tenants/{tenantId}/users/{userId}").buildAndExpand(tenant.getId(), user.getId()).toUri();
-        return ResponseEntity.created(location).body(data);
+        URI location = uriBuilder.path("/tenants/{tenantId}/users/{userId}")
+                .buildAndExpand(tenant.getId(), user.getId()).toUri();
+
+        return ResponseEntity.created(location).body(Map.of(
+                "message", "Usuário cadastrado com sucesso. Verifique seu email para ativar a conta."
+        ));
     }
-
     @GetMapping("/tenants/{tenantId}/users/{userId}/activate")
     public ResponseEntity<String> activateUser(
             @PathVariable Long tenantId,
@@ -170,67 +243,43 @@ public class UserController {
 
         Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
             logger.error("Tenant not found for tenantId: {}", tenantId);
-            return new RuntimeException("Tenant not found");
+            return new RuntimeException("Tenant não encontrado");
         });
 
-        User user = userRepository.findByEmail(data.email()).orElseThrow(() -> {
-            logger.error("User not found with email: {}", data.email());
-            return new RuntimeException("User not found");
-        });
+        Optional<User> optionalUser = userRepository.findByEmail(data.email());
+        if (optionalUser.isEmpty()) {
+            logger.warn("Email [{}] não cadastrado.", data.email());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Email não cadastrado."));
+        }
 
-        // TODO: Exception tratada, porém será necessário, reenviar e-mail para o usuário ou aumentar tempo de expiração por enquanto
-        if (user.getIsUserActive() != Status.ACTIVE) {
-            logger.error("User is not active for email: {}", data.email());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "User is not active"));
+        User user = optionalUser.get();
+
+        if (user.getIsUserActive() == Status.PENDING) {
+            logger.warn("Email [{}] pendente de validação.", data.email());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "Cadastro pendente. Por favor, valide seu email acessando o link enviado."
+            ));
+        } else if (user.getIsUserActive() != Status.ACTIVE) {
+            logger.warn("Status do usuário inválido para o email: {}", data.email());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", "Cadastro não está ativo. Entre em contato com o suporte."
+            ));
+        }
+
+        if (!user.getPassword().equals(data.password())) {
+            logger.warn("Senha incorreta para o email: {}", data.email());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Senha incorreta."));
         }
 
         String imageUrl = apiConfig.getApiBaseUrl() + user.getImageProfileBase64();
+        Map<String, String> response = new HashMap<>();
+        response.put("id", String.valueOf(user.getId()));
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("imageUrl", imageUrl);
 
-        logger.info("User password: {}", user.getPassword());
-        logger.info("Data password: {}", data.password());
-
-        if (user.getPassword().equals(data.password())) {
-            logger.info("Login successful for user email: {}", data.email());
-
-            Map<String, String> response = new HashMap<>();
-            response.put("id", String.valueOf(user.getId()));
-            response.put("name", user.getName());
-            response.put("email", user.getEmail());
-            response.put("imageUrl", imageUrl);
-
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            String base64image = "";
-
-            if (user.getImageProfileBase64() != null) {
-                try {
-                    HttpEntity<String> entity = new HttpEntity<>(headers);
-                    ResponseEntity<byte[]> responseImg = restTemplate.exchange(imageUrl, HttpMethod.GET, entity, byte[].class);
-
-                    if(responseImg.getStatusCode() != HttpStatus.OK){
-                        logger.error("Imagem não encontrada para o email: {}", data.email());
-                        response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
-                        return ResponseEntity.ok(response);
-                    }
-
-                    byte[] imageBytes = responseImg.getBody();
-                    base64image = Base64.getEncoder().encodeToString(imageBytes);
-
-                    response.put("imageBase64", base64image);
-                } catch (Exception e) {
-
-                    logger.error("Erro ao carregar a imagem do perfil para o email: {}", data.email(), e);
-                    response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
-                }
-            } else {
-                response.put("imageBase64", "http://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
-            }
-
-            return ResponseEntity.ok(response);
-        } else {
-            logger.warn("Incorrect password for user email: [{}], password: [{}]", data.email(), data.password());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Incorrect password"));
-        }
+        logger.info("Login realizado com sucesso para o email: {}", data.email());
+        return ResponseEntity.ok(response);
     }
 
     @Transactional
