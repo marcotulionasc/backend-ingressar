@@ -113,6 +113,9 @@ public class MercadoPagoController {
 
             String customTitle = paymentRequest.getEventName() + " - " + ticket.get().getAreaTicket() + " - " + ticket.get().getNameTicket();
 
+            logger.info("Creating item for ticket: {}", paymentRequest.getEventName());
+
+
             item.setTitle(customTitle)
                     .setQuantity(selectedTicket.getQuantity())
                     .setUnitPrice(Float.valueOf(ticket.get().getLot().getPriceTicket()))
@@ -143,6 +146,8 @@ public class MercadoPagoController {
              //       externalReference, status);
         //}
 
+        var eventIdInDatabase = eventRepository.findByNameEvent(paymentRequest.getEventName());
+
         Payment payment = new Payment();
         payment.setId(externalReference);
         payment.setUserId(userId);
@@ -151,9 +156,10 @@ public class MercadoPagoController {
         payment.setStatus(Status.PENDING);
         payment.setCreatedAt(createdAt);
         payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
-        payment.setEventId(paymentRequest.getEventId());
-        payment.setTenantId(paymentRequest.getTenantId());
+        payment.setEventId(Long.valueOf("2"));
+        payment.setTenantId("1");
         payment.setIsTicketActive(false); // :TODO when the QR Code is scanned, this field should be updated to true
+        payment.setIsTicketsSent(false);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String selectedTicketsJson = objectMapper.writeValueAsString(paymentRequest.getSelectedTickets());

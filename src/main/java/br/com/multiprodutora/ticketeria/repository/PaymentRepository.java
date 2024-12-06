@@ -1,6 +1,7 @@
 package br.com.multiprodutora.ticketeria.repository;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
+import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,7 +13,6 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     List<Payment> findByStatus(Status status);
 
     List<Payment> findByStatusAndIsTicketsSent(Status status, boolean isTicketsSent);
-
 
 }
 
