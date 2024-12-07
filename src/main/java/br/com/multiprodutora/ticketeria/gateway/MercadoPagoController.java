@@ -146,9 +146,6 @@ public class MercadoPagoController {
 
             logger.info("Preference created with ID: [{}] for external reference: [{}]", preference.getId(), externalReference);
 
-            // Configuração do pagamento
-            var eventIdInDatabase = eventRepository.findByNameEvent(paymentRequest.getEventName());
-
             Payment payment = new Payment();
             payment.setId(externalReference);
             payment.setUserId(userId);
@@ -157,8 +154,8 @@ public class MercadoPagoController {
             payment.setStatus(Status.PENDING);
             payment.setCreatedAt(createdAt);
             payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
-            payment.setEventId(Long.valueOf(paymentRequest.getEventId())); // Corrigido para usar o ID da solicitação
-            payment.setTenantId(paymentRequest.getTenantId()); // Corrigido para usar o tenantId da solicitação
+            payment.setEvent(paymentRequest.getEventId());
+            payment.setTenant(Long.valueOf(paymentRequest.getTenantId()));
             payment.setIsTicketActive(false);
             payment.setIsTicketsSent(false);
 

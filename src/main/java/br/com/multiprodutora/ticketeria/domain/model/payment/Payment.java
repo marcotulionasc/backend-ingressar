@@ -32,21 +32,14 @@ public class Payment {
     private Double totalAmount;
     private Boolean isTicketsSent;
 
-    @ManyToOne
     @JoinColumn(name = "event_id")
-    private Event event;
+    private Long event;
 
-    @ManyToOne
     @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
+    private Long tenant;
 
     @Lob
     @Column(name = "selected_tickets_json")
     private String selectedTicketsJson;
 
-    public void setEventId(Long eventId) {
-    }
-
-    public void setTenantId(String tenantId) {
-    }
 }

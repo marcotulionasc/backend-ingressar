@@ -59,14 +59,14 @@ public class PaymentService {
 
         Event event = eventRepository.findById(paymentDto.getEventId()).orElse(null);
         if (event != null) {
-            payment.setEvent(event);
+            payment.setEvent(event.getId());
         } else {
             throw new IllegalArgumentException("Evento não encontrado com ID: " + paymentDto.getEventId());
         }
 
         Tenant tenant = tenantRepository.findById(event.getTenant().getId()).orElse(null);
         if (tenant != null) {
-            payment.setTenant(tenant);
+            payment.setTenant(tenant.getId());
         } else {
             throw new IllegalArgumentException("Tenant não encontrado com ID: " + paymentDto.getTenantId());
         }
@@ -91,8 +91,10 @@ public class PaymentService {
                 payment.getSelectedTicketsJson(),
                 new TypeReference<List<TicketDTO>>() {});
 
-        Event event = payment.getEvent();
-        Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(event.getId());
+        Long eventId = payment.getEvent();
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new Exception("Evento não encontrado com ID: " + eventId));
+        Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(eventId);
 
         List<TicketPDFDTO> ticketPDFDTOList = new ArrayList<>();
         for (TicketDTO selectedTicket : selectedTickets) {
@@ -143,11 +145,13 @@ public class PaymentService {
                     payment.getSelectedTicketsJson(),
                     new TypeReference<List<TicketDTO>>() {});
 
-            Event event = payment.getEvent();
-            Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(event.getId());
+            Long eventId = payment.getEvent();
+            Event event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new Exception("Evento não encontrado com ID: " + eventId));
+            Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(eventId);
 
             if (!configEvent.isPresent()) {
-                throw new Exception("Configuração do Evento não encontrada para o evento: " + event.getTitleEvent());
+                throw new Exception("Configuração do Evento não encontrada para o evento: " + configEvent.get().getEvent());
             }
 
             for (TicketDTO selectedTicket : selectedTickets) {
