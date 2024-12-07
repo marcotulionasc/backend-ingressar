@@ -22,6 +22,7 @@ import com.mercadopago.resources.datastructures.preference.BackUrls;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -74,103 +76,111 @@ public class MercadoPagoController {
     private String notificationUrl;
 
     @PostMapping("/create-preference")
-    public ResponseEntity<Map<String, String>> createPreference(@RequestBody PaymentRequest paymentRequest) throws MPException, IOException {
-        logger.info("Received payment request for preference creation: {}", paymentRequest.toString());
+    public ResponseEntity<?> createPreference(@RequestBody PaymentRequest paymentRequest) {
+        try {
+            logger.info("Received payment request for preference creation: {}", paymentRequest.toString());
 
-        if (paymentRequest.getUserId() == null || paymentRequest.getUserId().isEmpty()) {
-            logger.error("User ID is null or empty");
-            throw new IllegalArgumentException("User ID is null or empty");
+            if (paymentRequest.getUserId() == null || paymentRequest.getUserId().isEmpty()) {
+                logger.error("User ID is null or empty");
+                throw new IllegalArgumentException("User ID is null or empty");
+            }
+            if (paymentRequest.getEventId() == null) {
+                logger.error("Event ID is null");
+                throw new IllegalArgumentException("Event ID is null");
+            }
+            if (paymentRequest.getTenantId() == null) {
+                logger.error("Tenant ID is null");
+                throw new IllegalArgumentException("Tenant ID is null");
+            }
+            if (paymentRequest.getSelectedTickets() == null || paymentRequest.getSelectedTickets().isEmpty()) {
+                logger.error("Selected tickets are null or empty");
+                throw new IllegalArgumentException("Selected tickets are null or empty");
+            }
+
+            String userId = paymentRequest.getUserId();
+            String userName = paymentRequest.getUserName();
+            String userEmail = paymentRequest.getUserEmail();
+
+            LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
+            String createdAtFormatted = createdAt.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+
+            String externalReference = createdAtFormatted + userId;
+
+            MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
+
+            Preference preference = new Preference();
+
+            for (TicketDTO selectedTicket : paymentRequest.getSelectedTickets()) {
+                Optional<Ticket> ticketOpt = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()));
+
+                if (!ticketOpt.isPresent()) {
+                    logger.error("Ticket não encontrado para o ID: {}", selectedTicket.getTicketId());
+                    throw new IllegalArgumentException("Ticket inválido com ID: " + selectedTicket.getTicketId());
+                }
+
+                Ticket ticket = ticketOpt.get();
+                Item item = new Item();
+
+                String customTitle = paymentRequest.getEventName() + " - " + ticket.getAreaTicket() + " - " + ticket.getNameTicket();
+
+                logger.info("Criando item para o ticket: {}", paymentRequest.getEventName());
+
+                item.setTitle(customTitle)
+                        .setQuantity(selectedTicket.getQuantity())
+                        .setUnitPrice(Float.valueOf(ticket.getLot().getPriceTicket()))
+                        .setCurrencyId("BRL");
+
+                preference.appendItem(item);
+            }
+
+            BackUrls backUrls = new BackUrls();
+            backUrls.setSuccess(backUrlSuccess)
+                    .setFailure(backUrlFailure)
+                    .setPending(backUrlPending);
+
+            preference.setBackUrls(backUrls);
+            preference.setAutoReturn(Preference.AutoReturn.approved);
+            preference.setExternalReference(externalReference);
+            preference.setNotificationUrl(notificationUrl);
+            preference.save();
+
+            logger.info("Preference created with ID: [{}] for external reference: [{}]", preference.getId(), externalReference);
+
+            // Configuração do pagamento
+            var eventIdInDatabase = eventRepository.findByNameEvent(paymentRequest.getEventName());
+
+            Payment payment = new Payment();
+            payment.setId(externalReference);
+            payment.setUserId(userId);
+            payment.setUserName(userName);
+            payment.setUserEmail(userEmail);
+            payment.setStatus(Status.PENDING);
+            payment.setCreatedAt(createdAt);
+            payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
+            payment.setEventId(Long.valueOf(paymentRequest.getEventId())); // Corrigido para usar o ID da solicitação
+            payment.setTenantId(paymentRequest.getTenantId()); // Corrigido para usar o tenantId da solicitação
+            payment.setIsTicketActive(false);
+            payment.setIsTicketsSent(false);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String selectedTicketsJson = objectMapper.writeValueAsString(paymentRequest.getSelectedTickets());
+            payment.setSelectedTicketsJson(selectedTicketsJson);
+
+            paymentRepository.save(payment);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("preferenceId", preference.getId());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            logger.error("Erro ao criar preferência: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Erro inesperado ao criar preferência", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Erro interno do servidor"));
         }
-        if (paymentRequest.getEventId() == null) {
-            logger.error("Event ID is null");
-            throw new IllegalArgumentException("Event ID is null");
-        }
-        if (paymentRequest.getTenantId() == null) {
-            logger.error("Tenant ID is null");
-            throw new IllegalArgumentException("Tenant ID is null");
-        }
-        if (paymentRequest.getSelectedTickets() == null || paymentRequest.getSelectedTickets().isEmpty()) {
-            logger.error("Selected tickets are null or empty");
-            throw new IllegalArgumentException("Selected tickets are null or empty");
-        }
-
-        String userId = paymentRequest.getUserId();
-        String userName = paymentRequest.getUserName();
-        String userEmail = paymentRequest.getUserEmail();
-
-        LocalDateTime createdAt = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
-        String createdAtFormatted = createdAt.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-
-        String externalReference = createdAtFormatted + userId; // :TODO the 14 caracters first is about the date and time of the payment
-
-        MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
-
-        Preference preference = new Preference();
-
-        for (TicketDTO selectedTicket : paymentRequest.getSelectedTickets()) {
-            Optional<Ticket> ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()));
-            Item item = new Item();
-
-            String customTitle = paymentRequest.getEventName() + " - " + ticket.get().getAreaTicket() + " - " + ticket.get().getNameTicket();
-
-            logger.info("Creating item for ticket: {}", paymentRequest.getEventName());
-
-
-            item.setTitle(customTitle)
-                    .setQuantity(selectedTicket.getQuantity())
-                    .setUnitPrice(Float.valueOf(ticket.get().getLot().getPriceTicket()))
-                    .setCurrencyId("BRL");
-
-            preference.appendItem(item);
-        }
-
-        BackUrls backUrls = new BackUrls();
-        backUrls.setSuccess(backUrlSuccess)
-                .setFailure(backUrlFailure)
-                .setPending(backUrlPending);
-
-        preference.setBackUrls(backUrls);
-        preference.setAutoReturn(Preference.AutoReturn.approved);
-        preference.setExternalReference(externalReference);
-        preference.setNotificationUrl(notificationUrl);
-        preference.save();
-
-        logger.info("Preference created with ID: [{}] for external reference: [{}]", preference.getId(), externalReference);
-
-        // String status = externalReferenceService.checkPaymentStatus(externalReference);
-
-        // if ("approved".equalsIgnoreCase(status)) {
-           // logger.info("Payment approved for externalReference: [{}]", externalReference);
-        // } else {
-           // logger.warn("Payment pending or rejected [{}], Status: [{}]",
-             //       externalReference, status);
-        //}
-
-        var eventIdInDatabase = eventRepository.findByNameEvent(paymentRequest.getEventName());
-
-        Payment payment = new Payment();
-        payment.setId(externalReference);
-        payment.setUserId(userId);
-        payment.setUserName(userName);
-        payment.setUserEmail(userEmail);
-        payment.setStatus(Status.PENDING);
-        payment.setCreatedAt(createdAt);
-        payment.setTotalAmount(Double.valueOf(paymentRequest.getTicketPriceTotal()));
-        payment.setEventId(Long.valueOf("2"));
-        payment.setTenantId("1");
-        payment.setIsTicketActive(false); // :TODO when the QR Code is scanned, this field should be updated to true
-        payment.setIsTicketsSent(false);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String selectedTicketsJson = objectMapper.writeValueAsString(paymentRequest.getSelectedTickets());
-        payment.setSelectedTicketsJson(selectedTicketsJson);
-
-        paymentRepository.save(payment);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("preferenceId", preference.getId());
-        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> savePayment(@RequestBody PaymentDTO paymentDto) {
