@@ -38,14 +38,11 @@ public class PaymentController {
     public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable Long userId) {
         try {
             List<TicketPDFDTO> ticketWebData = paymentService.getTicketWebData(userId);
-            if (ticketWebData.isEmpty()) {
-                return ResponseEntity.ok().body(ticketWebData);
-            }
             return ResponseEntity.ok(ticketWebData);
         } catch (Exception e) {
-
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
 }

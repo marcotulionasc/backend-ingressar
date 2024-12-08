@@ -14,5 +14,6 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
 
     List<Payment> findByStatusAndIsTicketsSent(Status status, boolean isTicketsSent);
 
+
 }
 

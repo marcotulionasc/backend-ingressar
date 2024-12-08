@@ -18,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 @Service
@@ -127,59 +124,63 @@ public class PaymentService {
         return ticketPDFDTOList;
     }
 
-    public List<TicketPDFDTO> getTicketWebData(Long userId) throws Exception {
-
+    public List<TicketPDFDTO> getTicketWebData(Long userId) {
         var userIdString = userId.toString();
         List<Payment> payments = paymentRepository.findByUserId(userIdString);
 
         if (payments.isEmpty()) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
 
         List<TicketPDFDTO> allTickets = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
         for (Payment payment : payments) {
+            try {
+                List<TicketDTO> selectedTickets = objectMapper.readValue(
+                        payment.getSelectedTicketsJson(),
+                        new TypeReference<List<TicketDTO>>() {});
 
-            List<TicketDTO> selectedTickets = objectMapper.readValue(
-                    payment.getSelectedTicketsJson(),
-                    new TypeReference<List<TicketDTO>>() {});
+                Long eventId = payment.getEvent();
+                Event event = eventRepository.findById(eventId)
+                        .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado com ID: " + eventId));
+                ConfigEvent configEvent = configEventRepository.findByEventId(eventId)
+                        .orElseThrow(() -> new IllegalArgumentException("Configuração do Evento não encontrada para o evento: " + eventId));
 
-            Long eventId = payment.getEvent();
-            Event event = eventRepository.findById(eventId)
-                    .orElseThrow(() -> new Exception("Evento não encontrado com ID: " + eventId));
-            Optional<ConfigEvent> configEvent = configEventRepository.findByEventId(eventId);
+                for (TicketDTO selectedTicket : selectedTickets) {
+                    Ticket ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()))
+                            .orElseThrow(() -> new IllegalArgumentException("Ingresso não encontrado com ID: " + selectedTicket.getTicketId()));
 
-            if (!configEvent.isPresent()) {
-                throw new Exception("Configuração do Evento não encontrada para o evento: " + configEvent.get().getEvent());
-            }
+                    Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Lote ativo não encontrado para o ingresso com ID: " + ticket.getId()));
 
-            for (TicketDTO selectedTicket : selectedTickets) {
-                Ticket ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()))
-                        .orElseThrow(() -> new Exception("Ingresso não encontrado"));
+                    // Validar valores antes de criar o DTO
+                    String enderecoEvento = event.getAddress() != null ? event.getAddress().toString() : "Endereço não informado";
 
-                Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
-                        .orElseThrow(() -> new Exception("Lote ativo não encontrado"));
+                    TicketPDFDTO ticketPDFDTO = new TicketPDFDTO(
+                            event.getTitleEvent(),                        // nomeEvento
+                            event.getDate(),                              // dataEvento
+                            event.getHourOfStart(),                       // aberturaPortas
+                            event.getLocal(),                             // localEvento
+                            enderecoEvento,                               // enderecoEvento
+                            ticket.getId(),                               // idIngresso
+                            ticket.getNameTicket(),                       // nomeIngresso
+                            ticket.getAreaTicket(),                       // areaIngresso
+                            activeLot.getId(),                            // idLoteAtivo
+                            activeLot.getPriceTicket(),                   // valorLote
+                            activeLot.getAmountTicket(),                  // quantidadeLote
+                            activeLot.getTaxPriceTicket(),                // taxaLote
+                            payment.getCreatedAt().toString(),            // dataCompra
+                            payment.getUserName(),                        // nomeComprador
+                            configEvent.getTextThatAppearsOnTheTicketWhenGoToEmail() // textoNoIngresso
+                    );
 
-                TicketPDFDTO ticketPDFDTO = new TicketPDFDTO(
-                        event.getTitleEvent(),                        // nomeEvento
-                        event.getDate(),                              // dataEvento
-                        event.getHourOfStart(),                       // aberturaPortas
-                        event.getLocal(),                             // localEvento
-                        event.getAddress().toString(),                // enderecoEvento
-                        ticket.getId(),                               // idIngresso
-                        ticket.getNameTicket(),                       // nomeIngresso
-                        ticket.getAreaTicket(),                       // areaIngresso
-                        activeLot.getId(),                            // idLoteAtivo
-                        activeLot.getPriceTicket(),                   // valorLote
-                        activeLot.getAmountTicket(),                  // quantidadeLote
-                        activeLot.getTaxPriceTicket(),                // taxaLote
-                        payment.getCreatedAt().toString(),            // dataCompra
-                        payment.getUserName(),                        // nomeComprador
-                        configEvent.get().getTextThatAppearsOnTheTicketWhenGoToEmail() // textoNoIngresso
-                );
-
-                allTickets.add(ticketPDFDTO);
+                    allTickets.add(ticketPDFDTO);
+                }
+            } catch (Exception e) {
+                // Logar o erro e continuar processando os próximos pagamentos
+                System.err.println("Erro ao processar pagamento ID: " + payment.getId() + ". " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
