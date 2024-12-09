@@ -1,6 +1,7 @@
 package br.com.multiprodutora.ticketeria.service;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
+import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;
@@ -73,7 +74,6 @@ public class PaymentProcessingService {
                             "Obrigado por comprar conosco e aproveite o evento!";
 
                     logger.info("Sending email with tickets to: {}", email);
-                    // Passa os anexos como array
                     emailService.sendEmailWithAttachments(email, subject, body, pdfTickets.toArray(new File[0]));
 
                     for (File pdfFile : pdfTickets) {
@@ -128,21 +128,24 @@ public class PaymentProcessingService {
 
     private Map<String, String> getTicketData(Ticket ticket, Payment payment) {
 
-        String nameEvent = String.valueOf(eventRepository.findById(2L));
+        Event eventByTicketId = (Event) eventRepository.findByTicketsId(ticket.getId());
+        if (eventByTicketId == null) {
+            throw new IllegalStateException("Evento não encontrado para o ticket ID: " + ticket.getId());
+        }
 
         Map<String, String> data = new HashMap<>();
-        data.put("nomeEvento", "Forró de natal");
-        data.put("dataEvento", "22/12/2024");
-        data.put("localEvento", "Brasuca Multicultural");
-        data.put("aberturaCasa", "16h");
+        data.put("nomeEvento", eventByTicketId.getTitleEvent());
+        data.put("dataEvento", eventByTicketId.getDate() != null ? eventByTicketId.getDate() : "Data não disponível");
+        data.put("localEvento", eventByTicketId.getLocal() + " - " + eventByTicketId.getAddress());
+        data.put("aberturaCasa", eventByTicketId.getHourOfStart());
         data.put("nomeIngresso", ticket.getNameTicket());
         data.put("areaIngresso", ticket.getAreaTicket());
-        data.put("valorLote", String.valueOf(ticket.getLot().getPriceTicket()));
+        data.put("valorLote", String.valueOf(payment.getTotalAmount()));
         data.put("taxaLote", String.valueOf(ticket.getLot().getTaxPriceTicket()));
         data.put("dataCompra", payment.getCreatedAt().toString());
         data.put("nomeComprador", payment.getUserName());
-        // data.put("textoNoIngresso", payment.getEvent().getConfigEvent().getTextThatAppearsOnTheTicket());
         data.put("idIngresso", String.valueOf(ticket.getId()));
+
         return data;
     }
 
@@ -163,7 +166,6 @@ public class PaymentProcessingService {
         float headingFontSize = 14;
         float regularFontSize = 12;
 
-        // Carrega o logotipo se existir
         InputStream logoStream = getClass().getResourceAsStream("/logo.png");
         PDImageXObject logoImage = null;
         if (logoStream != null) {
@@ -181,10 +183,9 @@ public class PaymentProcessingService {
             float logoX = (pageWidth - logoWidth) / 2;
             float logoY = yStart - logoHeight;
             contentStream.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
-            yStart = logoY - 20; // Ajusta ponto de partida do texto abaixo do logo
+            yStart = logoY - 20;
         }
 
-        // Desenha o título do evento, centralizado
         contentStream.beginText();
         contentStream.setFont(titleFont, titleFontSize);
 
@@ -262,7 +263,7 @@ public class PaymentProcessingService {
         yStart -= (regularFontSize + 5);
         writeText.accept("Área: " + ticketData.get("areaIngresso"), yStart);
         yStart -= (regularFontSize + 5);
-        writeText.accept("Valor: R$" + ticketData.get("valorLote") + " + Taxa: R$" + ticketData.get("taxaLote"), yStart);
+        writeText.accept("Valor: R$" + ticketData.get("valorLote") + " + Taxa: %" + ticketData.get("taxaLote"), yStart);
         yStart -= (regularFontSize + 5);
 
         yStart -= 10;
@@ -278,23 +279,19 @@ public class PaymentProcessingService {
         writeText.accept("Data da compra: " + ticketData.get("dataCompra"), yStart);
         yStart -= (regularFontSize + 5);
 
-        // Espaço antes do QR Code
-        yStart -= 30; // Ajuste conforme necessário para criar espaço entre os detalhes da compra e o QR Code
+        yStart -= 30;
 
-        // Gerar QR Code com o endpoint específico
         String ticketId = ticketData.get("idIngresso");
         String qrEndpoint = "https://backend-ingressar.onrender.com/updateStatus?ticketId=" + ticketId + "&status=AUTHORIZED";
         ByteArrayOutputStream qrCodeStream = QRCodeGenerator.generateQRCodeImage(qrEndpoint, 150, 150);
         PDImageXObject pdImage = PDImageXObject.createFromByteArray(document, qrCodeStream.toByteArray(), "qrcode");
 
-        // Centralizar o QR Code na página
         float qrWidth = 150;
         float qrHeight = 150;
         float qrX = (pageWidth - qrWidth) / 2;
-        float qrY = yStart - qrHeight; // Posiciona o QR Code abaixo do espaço reservado
+        float qrY = yStart - qrHeight;
         contentStream.drawImage(pdImage, qrX, qrY, qrWidth, qrHeight);
 
-        // Atualiza yStart após o QR Code
         yStart = qrY - 20;
 
         contentStream.close();
