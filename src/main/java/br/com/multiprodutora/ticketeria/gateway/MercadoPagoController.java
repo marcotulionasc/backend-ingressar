@@ -123,11 +123,15 @@ public class MercadoPagoController {
 
                 String customTitle = paymentRequest.getEventName() + " - " + ticket.getAreaTicket() + " - " + ticket.getNameTicket();
 
-                logger.info("Criando item para o ticket: {}", paymentRequest.getEventName());
+                try {
+                    logger.info("Criando item para o ticket: {}", paymentRequest.getEventName());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
 
                 item.setTitle(customTitle)
                         .setQuantity(selectedTicket.getQuantity())
-                        .setUnitPrice(Float.valueOf(ticket.getLot().getPriceTicket()))
+                        .setUnitPrice(Float.valueOf(paymentRequest.getTicketPriceTotal()))
                         .setCurrencyId("BRL");
 
                 preference.appendItem(item);
