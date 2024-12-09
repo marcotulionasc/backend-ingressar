@@ -130,7 +130,7 @@ public class MercadoPagoController {
                 }
 
                 item.setTitle(customTitle)
-                        .setQuantity(selectedTicket.getQuantity())
+                        .setQuantity(1)
                         .setUnitPrice(Float.valueOf(paymentRequest.getTicketPriceTotal()))
                         .setCurrencyId("BRL");
 
