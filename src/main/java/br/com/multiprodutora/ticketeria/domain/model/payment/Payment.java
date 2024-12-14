@@ -26,7 +26,10 @@ public class Payment {
     private String userId;
     private String userName;
     private String userEmail;
+
+    @Enumerated(EnumType.ORDINAL)
     private Status status;
+
     private LocalDateTime createdAt;
     private Boolean isTicketActive;
     private Double totalAmount;

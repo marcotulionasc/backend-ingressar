@@ -451,6 +451,56 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+
+    @Transactional
+    @GetMapping("/tenants/{tenantId}/users/info")
+    public ResponseEntity<List<Map<String, Object>>> listUsersInfoByTenant(@PathVariable Long tenantId){
+        logger.info("Received request to list users info for tenantId: {}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElseThrow(() -> {
+            logger.error("Tenant not found for tenantId: {}", tenantId);
+            return new RuntimeException("Tenant not found");
+        });
+
+        Iterable<User> users = userRepository.findByTenant(tenant);
+
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (User user : users) {
+            Map<String, Object> userResponse = new HashMap<>();
+            userResponse.put("id", user.getId());
+            userResponse.put("name", user.getName());
+            userResponse.put("email", user.getEmail());
+            userResponse.put("cpf", user.getCpf());
+            userResponse.put("phone", user.getPhone());
+            userResponse.put("birthDate", user.getBirthDate());
+            userResponse.put("imageProfileBase64", user.getImageProfileBase64() != null
+                    ? apiConfig.getApiBaseUrl() + user.getImageProfileBase64()
+                    : "https://via.placeholder.com/300x150.png?text=Imagem+Indisponível");
+
+            if (user.getAddress() != null) {
+                userResponse.put("street", user.getAddress().getStreet());
+                userResponse.put("neighborhood", user.getAddress().getNeighborhood());
+                userResponse.put("numberAddress", user.getAddress().getNumberAddress());
+                userResponse.put("cep", user.getAddress().getCep());
+                userResponse.put("uf", user.getAddress().getUf());
+                userResponse.put("complement", user.getAddress().getComplement());
+                userResponse.put("city", user.getAddress().getCity());
+            } else {
+                userResponse.put("street", "");
+                userResponse.put("neighborhood", "");
+                userResponse.put("numberAddress", "");
+                userResponse.put("cep", "");
+                userResponse.put("uf", "");
+                userResponse.put("complement", "");
+                userResponse.put("city", "");
+            }
+
+            response.add(userResponse);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
     private List<Map<String, Object>> getMaps(Iterable<User> users) {
         List<Map<String, Object>> response = new ArrayList<>();
         for (User user : users) {

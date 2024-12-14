@@ -9,7 +9,8 @@ import lombok.ToString;
 @Setter
 @ToString
 public class TicketDTO {
-    @JsonProperty("id")
+
+    @JsonProperty("ticketId")
     private String ticketId;
     private String name;
     Double price;
