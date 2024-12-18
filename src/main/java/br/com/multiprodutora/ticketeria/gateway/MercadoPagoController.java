@@ -198,45 +198,44 @@ public class MercadoPagoController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/notifications")
-    public ResponseEntity<String> handleNotification(@RequestParam("topic") String topic, @RequestParam("id") String id) {
-        logger.info("Received notification: topic={}, id={}", topic, id);
-
-        if ("payment".equals(topic)) {
-            try {
-                if (id == null || id.isEmpty()) {
-                    logger.error("ID de pagamento inválido.");
-                    return ResponseEntity.ok("ID de pagamento inválido");
-                }
-
-                MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
-                com.mercadopago.resources.Payment payment = com.mercadopago.resources.Payment.findById(id);
-
-                if (payment == null) {
-                    logger.error("Pagamento não encontrado para o ID: {}", id);
-                    return ResponseEntity.ok("Pagamento não encontrado");
-                }
-
-                String statusMP = String.valueOf(payment.getStatus());
-                String externalReference = payment.getExternalReference();
-                Float transactionAmount = payment.getTransactionAmount();
-                Double amount = (transactionAmount != null) ? transactionAmount.doubleValue() : 0.0;
-
-                paymentService.updatePaymentStatus(externalReference, statusMP, amount);
-
-                logger.info("Status do pagamento atualizado para referência externa: {} com status: {}", externalReference, statusMP);
-            } catch (Exception e) {
-                logger.error("Erro ao processar a notificação", e);
-
-                return ResponseEntity.ok("Erro ao processar a notificação");
-            }
-        } else {
-            logger.warn("Tópico não suportado ou ID inválido: topic={}, id={}", topic, id);
-
-            return ResponseEntity.ok("Tópico não suportado");
-        }
-
-        return ResponseEntity.ok("Notificação recebida com sucesso");
-    }
+//    @PostMapping("/notifications")
+//    public ResponseEntity<String> handleNotification(@RequestParam("topic") String topic, @RequestParam("id") String id) {
+//
+//        if ("payment".equals(topic)) {
+//            try {
+//                if (id == null || id.isEmpty()) {
+//                    logger.error("ID de pagamento inválido.");
+//                    return ResponseEntity.ok("ID de pagamento inválido");
+//                }
+//
+//                MercadoPago.SDK.setAccessToken(mercadoPagoAcessToken);
+//                com.mercadopago.resources.Payment payment = com.mercadopago.resources.Payment.findById(id);
+//
+//                if (payment == null) {
+//                    logger.error("Pagamento não encontrado para o ID: {}", id);
+//                    return ResponseEntity.ok("Pagamento não encontrado");
+//                }
+//
+//                String statusMP = String.valueOf(payment.getStatus());
+//                String externalReference = payment.getExternalReference();
+//                Float transactionAmount = payment.getTransactionAmount();
+//                Double amount = (transactionAmount != null) ? transactionAmount.doubleValue() : 0.0;
+//
+//                paymentService.updatePaymentStatus(externalReference, statusMP, amount);
+//
+//                logger.info("Status do pagamento atualizado para referência externa: {} com status: {}", externalReference, statusMP);
+//            } catch (Exception e) {
+//                logger.error("Erro ao processar a notificação", e);
+//
+//                return ResponseEntity.ok("Erro ao processar a notificação");
+//            }
+//        } else {
+//            logger.warn("Tópico não suportado ou ID inválido: topic={}, id={}", topic, id);
+//
+//            return ResponseEntity.ok("Tópico não suportado");
+//        }
+//
+//        return ResponseEntity.ok("Notificação recebida com sucesso");
+//    }
 
 }

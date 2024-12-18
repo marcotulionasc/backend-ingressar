@@ -40,7 +40,7 @@ public class PaymentController {
     }
 
     @Transactional
-    @GetMapping("/user/{userId}/ticketdata")
+    @GetMapping("/user/{userEmail}/ticketdata")
     public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable String userEmail) {
         try {
             List<TicketPDFDTO> ticketWebData = paymentService.getTicketWebData(userEmail);
