@@ -1,4 +1,4 @@
-package br.com.multiprodutora.ticketeria.application;
+package br.com.multiprodutora.ticketeria;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
