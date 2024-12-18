@@ -18,9 +18,9 @@ public class TicketUserController {
     private PaymentService paymentService;
 
     @GetMapping("/user-tickets/{userId}")
-    public ResponseEntity<List<Payment>> getPaymentsByUserId(Long userId) {
+    public ResponseEntity<List<Payment>> getPaymentsByUserId(String userId){
 
-        List<Payment> payments = paymentService.getPaymentsByUserId(String.valueOf(userId));
+        List<Payment> payments = paymentService.getPaymentsByUserId(userId);
         if(payments.isEmpty()){
             return ResponseEntity.noContent().build();
         }
