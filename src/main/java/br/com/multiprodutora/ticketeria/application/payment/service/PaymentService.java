@@ -233,7 +233,7 @@ public class PaymentService {
     }
 
     public List<Payment> getPaymentsByUserId(String userId) {
-        return paymentRepository.findByUserId(userId);
+        return paymentRepository.findPaymentsByStatusAndUserId(7, userId);
     }
 }
 
