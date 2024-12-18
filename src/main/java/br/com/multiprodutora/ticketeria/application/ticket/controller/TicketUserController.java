@@ -17,10 +17,10 @@ public class TicketUserController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping("/user-tickets")
-    public ResponseEntity<List<Payment>> getPaymentsByUserId(){
+    @GetMapping("/user-tickets/{userId}")
+    public ResponseEntity<List<Payment>> getPaymentsByUserId(Long userId) {
 
-        List<Payment> payments = paymentService.getPaymentsByUserId("userId");
+        List<Payment> payments = paymentService.getPaymentsByUserId(String.valueOf(userId));
         if(payments.isEmpty()){
             return ResponseEntity.noContent().build();
         }
