@@ -15,6 +15,8 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, String> {
     List<Payment> findByUserId(String userId);
 
+    List<Payment> findByUserEmail(String userEmail);
+
     List<Payment> findByStatus(Status status);
 
     List<Payment> findByStatusAndIsTicketsSent(Status status, boolean isTicketsSent);
