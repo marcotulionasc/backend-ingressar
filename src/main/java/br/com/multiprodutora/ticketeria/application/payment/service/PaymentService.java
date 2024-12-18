@@ -231,5 +231,9 @@ public class PaymentService {
             logger.info("Pagamento aprovado processado com sucesso para ID: " + externalReference);
         }
     }
+
+    public List<Payment> getPaymentsByUserId(String userId) {
+        return paymentRepository.findByUserId(userId);
+    }
 }
 
