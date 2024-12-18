@@ -41,17 +41,14 @@ public class MercadoPagoPaymentStatusService {
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void updatePaymentStatus() {
-        logger.info("Starting payment status update...");
 
         try {
             List<Payment> pendingPayments = paymentRepository.findByStatus(Status.PENDING);
-            logger.info("Found {} pending payments to process.", pendingPayments.size());
 
             for (Payment localPayment : pendingPayments) {
                 try {
                     String externalReference = localPayment.getId();
                     String url = MP_SEARCH_URL + "?external_reference=" + externalReference;
-                    logger.info("Checking payment status for Payment ID: {} with URL: {}", externalReference, url);
 
                     HttpHeaders headers = new HttpHeaders();
                     headers.setBearerAuth(mercadoPagoAccessToken);
@@ -66,7 +63,6 @@ public class MercadoPagoPaymentStatusService {
                         if (mpApiResponse.getResults() != null && !mpApiResponse.getResults().isEmpty()) {
                             MPAPIPayment mpPayment = mpApiResponse.getResults().get(0);
                             String mpStatus = mpPayment.getStatus();
-                            logger.info("Payment ID: {} - Mercado Pago status: {}", externalReference, mpStatus);
 
                             switch (mpStatus.toLowerCase()) {
                                 case "approved":
@@ -86,21 +82,10 @@ public class MercadoPagoPaymentStatusService {
                             }
 
                             paymentRepository.save(localPayment);
-                            logger.info("Payment ID: {} status updated to: {}", externalReference, localPayment.getStatus());
 
-                            // Verificação adicional no banco
-                            logger.info("Verifying updated payment in database...");
                             Payment updatedPayment = paymentRepository.findById(localPayment.getId()).orElse(null);
-                            if (updatedPayment != null) {
-                                logger.info("Payment ID: {}, Status in database: {}", updatedPayment.getId(), updatedPayment.getStatus());
-                            } else {
-                                logger.warn("Payment ID: {} not found in database after update.", localPayment.getId());
-                            }
-                        } else {
-                            logger.warn("Payment ID: {} - No results returned from Mercado Pago API.", externalReference);
+                            return;
                         }
-                    } else {
-                        logger.error("Payment ID: {} - Failed to fetch status. HTTP Status: {}", externalReference, response.getStatusCode());
                     }
                 } catch (Exception e) {
                     logger.error("Error while processing Payment ID: {} - {}", localPayment.getId(), e.getMessage(), e);
@@ -109,9 +94,5 @@ public class MercadoPagoPaymentStatusService {
         } catch (Exception e) {
             logger.error("Unexpected error in updatePaymentStatus - {}", e.getMessage(), e);
         }
-
-        logger.info("Finished payment status update.");
     }
-
-
 }

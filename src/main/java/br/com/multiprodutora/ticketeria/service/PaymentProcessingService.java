@@ -54,12 +54,10 @@ public class PaymentProcessingService {
     @Scheduled(fixedDelay = 60000) //:TODO - Change to 30 seconds in the future
     @Transactional
     public void processApprovedPayments() {
-        logger.info("Starting approved payments processing...");
 
         try {
 
             List<Payment> approvedPayments = paymentRepository.findByStatusAndIsTicketsSent(Status.APPROVED, false);
-            logger.info("Found {} approved payments to process.", approvedPayments.size());
 
             for (Payment payment : approvedPayments) {
                 try {
@@ -78,15 +76,14 @@ public class PaymentProcessingService {
 
                     for (File pdfFile : pdfTickets) {
                         if (pdfFile.delete()) {
-                            logger.info("Temporary ticket file deleted: {}", pdfFile.getName());
+                            return;
                         } else {
                             logger.warn("Failed to delete temporary ticket file: {}", pdfFile.getName());
                         }
                     }
 
-                    payment.setIsTicketsSent(true);
+                    payment.setIsTicketsSent(true); //:TODO - Change to true in the future
                     paymentRepository.save(payment);
-                    logger.info("Payment ID: {} - Tickets sent and status updated.", payment.getId());
 
                 } catch (Exception e) {
                     logger.error("Error while processing approved Payment ID: {} - {}", payment.getId(), e.getMessage(), e);
@@ -95,8 +92,6 @@ public class PaymentProcessingService {
         } catch (Exception e) {
             logger.error("Unexpected error in processApprovedPayments - {}", e.getMessage(), e);
         }
-
-        logger.info("Finished approved payments processing.");
     }
 
     private List<File> generatedPdfTickets(Payment payment) throws IOException, WriterException {
@@ -174,7 +169,6 @@ public class PaymentProcessingService {
 
         PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
-        // Desenha o logotipo no topo, centralizado
         if (logoImage != null) {
             float logoWidth = 100;
             float logoHeight = 100;
@@ -199,7 +193,6 @@ public class PaymentProcessingService {
 
         yStart -= (titleFontSize + 20);
 
-        // Funções auxiliares para escrever heading e texto
         BiConsumer<String, Float> writeHeading = (text, currentY) -> {
             try {
                 contentStream.beginText();
@@ -224,7 +217,6 @@ public class PaymentProcessingService {
             }
         };
 
-        // Função auxiliar para desenhar linhas divisórias
         Consumer<Float> drawLine = (currentY) -> {
             try {
                 contentStream.setStrokingColor(0, 0, 0);
@@ -236,7 +228,6 @@ public class PaymentProcessingService {
             }
         };
 
-        // Detalhes do Evento
         yStart -= 10;
         drawLine.accept(yStart);
         yStart -= 20;
@@ -255,7 +246,6 @@ public class PaymentProcessingService {
         drawLine.accept(yStart);
         yStart -= 20;
 
-        // Detalhes do Ingresso
         writeHeading.accept("Detalhes do Ingresso", yStart);
         yStart -= (headingFontSize + 10);
 
@@ -270,7 +260,6 @@ public class PaymentProcessingService {
         drawLine.accept(yStart);
         yStart -= 20;
 
-        // Detalhes da Compra
         writeHeading.accept("Detalhes da Compra", yStart);
         yStart -= (headingFontSize + 10);
 
