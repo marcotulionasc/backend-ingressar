@@ -40,10 +40,10 @@ public class PaymentController {
     }
 
     @Transactional
-    @GetMapping("/user/{userEmail}/ticketdata")
-    public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable String userEmail) {
+    @GetMapping("/user/{userId}/ticketdata")
+    public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable Long userId) {
         try {
-            List<TicketPDFDTO> ticketWebData = paymentService.getTicketWebData(userEmail);
+            List<TicketPDFDTO> ticketWebData = paymentService.getTicketWebData(userId);
             return ResponseEntity.ok(ticketWebData);
         } catch (Exception e) {
             e.printStackTrace();

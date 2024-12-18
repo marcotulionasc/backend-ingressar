@@ -124,9 +124,9 @@ public class PaymentService {
         return ticketPDFDTOList;
     }
 
-    public List<TicketPDFDTO> getTicketWebData(String userEmail) {
-
-        List<Payment> payments = paymentRepository.findByUserEmail(userEmail);
+    public List<TicketPDFDTO> getTicketWebData(Long userId) {
+        var userIdString = userId.toString();
+        List<Payment> payments = paymentRepository.findByUserId(userIdString);
 
         if (payments.isEmpty()) {
             return Collections.emptyList();
