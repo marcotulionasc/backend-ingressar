@@ -75,11 +75,7 @@ public class PaymentProcessingService {
                     emailService.sendEmailWithAttachments(email, subject, body, pdfTickets.toArray(new File[0]));
 
                     for (File pdfFile : pdfTickets) {
-                        if (pdfFile.delete()) {
-                            return;
-                        } else {
-                            logger.warn("Failed to delete temporary ticket file: {}", pdfFile.getName());
-                        }
+                        pdfFile.delete();
                     }
 
                     payment.setIsTicketsSent(true); //:TODO - Change to true in the future
