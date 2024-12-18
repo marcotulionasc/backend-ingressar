@@ -4,14 +4,12 @@ import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import br.com.multiprodutora.ticketeria.domain.model.shoppingCart.ShoppingCart;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
-import br.com.multiprodutora.ticketeria.domain.model.user.dto.CreateUserDTO;
+import br.com.multiprodutora.ticketeria.application.user.dto.CreateUserDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Base64;
 
 @Entity
 @Table(name = "users")

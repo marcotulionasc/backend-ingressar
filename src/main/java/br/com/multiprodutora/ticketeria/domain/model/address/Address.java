@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.domain.model.address;
 
-import br.com.multiprodutora.ticketeria.domain.model.address.dto.AddressDTO;
+import br.com.multiprodutora.ticketeria.application.address.dto.AddressDTO;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

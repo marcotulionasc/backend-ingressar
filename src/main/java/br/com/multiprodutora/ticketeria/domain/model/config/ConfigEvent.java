@@ -1,13 +1,11 @@
 package br.com.multiprodutora.ticketeria.domain.model.config;
 
 import br.com.multiprodutora.ticketeria.config.Decision;
-import br.com.multiprodutora.ticketeria.domain.model.config.dto.CreateConfigEventDTO;
+import br.com.multiprodutora.ticketeria.application.configevent.dto.CreateConfigEventDTO;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.Base64;
 
 @Entity(name = "ConfigEvent")
 @Table(name = "config_event")

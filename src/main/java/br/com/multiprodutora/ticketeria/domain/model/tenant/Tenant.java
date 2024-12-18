@@ -2,7 +2,7 @@ package br.com.multiprodutora.ticketeria.domain.model.tenant;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.tenant.dto.RegisterTenantDTO;
+import br.com.multiprodutora.ticketeria.application.tenant.dto.RegisterTenantDTO;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.domain.model.payment;
 
-import br.com.multiprodutora.ticketeria.domain.model.payment.dto.TicketDTO;
+import br.com.multiprodutora.ticketeria.application.payment.dto.TicketDTO;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -2,7 +2,7 @@ package br.com.multiprodutora.ticketeria.domain.model.lot;
 
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
-import br.com.multiprodutora.ticketeria.domain.model.lot.dto.CreateLotDTO;
+import br.com.multiprodutora.ticketeria.application.lot.dto.CreateLotDTO;
 import br.com.multiprodutora.ticketeria.domain.model.shoppingCart.ShoppingCart;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
 import br.com.multiprodutora.ticketeria.domain.model.ticket.Ticket;

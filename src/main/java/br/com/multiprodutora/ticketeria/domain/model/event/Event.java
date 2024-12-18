@@ -4,7 +4,7 @@ package br.com.multiprodutora.ticketeria.domain.model.event;
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import br.com.multiprodutora.ticketeria.domain.model.config.ConfigEvent;
-import br.com.multiprodutora.ticketeria.domain.model.event.dto.CreateEventDTO;
+import br.com.multiprodutora.ticketeria.application.event.dto.CreateEventDTO;
 import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
 import br.com.multiprodutora.ticketeria.domain.model.shoppingCart.ShoppingCart;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
@@ -13,7 +13,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.List;
 
 @Entity(name = "Event")

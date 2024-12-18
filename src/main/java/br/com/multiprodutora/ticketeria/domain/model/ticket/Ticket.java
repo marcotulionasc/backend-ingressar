@@ -5,7 +5,7 @@ import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.lot.Lot;
 import br.com.multiprodutora.ticketeria.domain.model.shoppingCart.ShoppingCart;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
-import br.com.multiprodutora.ticketeria.domain.model.ticket.dto.CreateTicketDTO;
+import br.com.multiprodutora.ticketeria.application.ticket.dto.CreateTicketDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
