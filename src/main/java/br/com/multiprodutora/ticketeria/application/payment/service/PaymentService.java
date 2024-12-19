@@ -224,7 +224,7 @@ public class PaymentService {
                 paymentStatus = Status.REJECTED;
                 break;
             default:
-                paymentStatus = Status.UNKNOWN;
+                paymentStatus = Status.PENDING;
                 break;
         }
 
