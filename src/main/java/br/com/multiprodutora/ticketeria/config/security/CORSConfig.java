@@ -1,4 +1,4 @@
-package br.com.multiprodutora.ticketeria.config;
+package br.com.multiprodutora.ticketeria.config.security;
 
 import lombok.NonNull;
 import org.springframework.context.annotation.Configuration;

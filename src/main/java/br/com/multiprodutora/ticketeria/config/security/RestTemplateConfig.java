@@ -1,4 +1,4 @@
-package br.com.multiprodutora.ticketeria.config;
+package br.com.multiprodutora.ticketeria.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

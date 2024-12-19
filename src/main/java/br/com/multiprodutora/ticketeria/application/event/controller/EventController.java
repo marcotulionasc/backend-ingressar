@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.application.event.controller;
 
-import br.com.multiprodutora.ticketeria.config.ApiConfig;
+import br.com.multiprodutora.ticketeria.utils.ApiConfig;
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.application.event.dto.CreateEventDTO;

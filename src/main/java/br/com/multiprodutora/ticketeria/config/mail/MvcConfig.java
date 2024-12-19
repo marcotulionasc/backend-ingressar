@@ -1,4 +1,4 @@
-package br.com.multiprodutora.ticketeria.config;
+package br.com.multiprodutora.ticketeria.config.mail;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

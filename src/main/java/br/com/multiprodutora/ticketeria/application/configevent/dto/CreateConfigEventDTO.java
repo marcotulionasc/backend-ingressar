@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.application.configevent.dto;
 
-import br.com.multiprodutora.ticketeria.config.Decision;
+import br.com.multiprodutora.ticketeria.config.enums.Decision;
 import br.com.multiprodutora.ticketeria.domain.model.config.Genero;
 import br.com.multiprodutora.ticketeria.domain.model.event.Event;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;

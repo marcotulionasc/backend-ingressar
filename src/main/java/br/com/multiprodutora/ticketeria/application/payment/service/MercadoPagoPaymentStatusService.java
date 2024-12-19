@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.application.payment.service;
 
-import br.com.multiprodutora.ticketeria.config.RestTemplateConfig;
+import br.com.multiprodutora.ticketeria.config.security.RestTemplateConfig;
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.payment.Payment;
 import br.com.multiprodutora.ticketeria.application.payment.repository.PaymentRepository;

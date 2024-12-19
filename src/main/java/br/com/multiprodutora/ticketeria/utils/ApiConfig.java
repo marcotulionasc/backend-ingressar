@@ -1,4 +1,4 @@
-package br.com.multiprodutora.ticketeria.config;
+package br.com.multiprodutora.ticketeria.utils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;

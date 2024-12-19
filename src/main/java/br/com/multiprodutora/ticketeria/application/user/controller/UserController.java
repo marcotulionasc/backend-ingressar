@@ -1,6 +1,6 @@
 package br.com.multiprodutora.ticketeria.application.user.controller;
 
-import br.com.multiprodutora.ticketeria.config.ApiConfig;
+import br.com.multiprodutora.ticketeria.utils.ApiConfig;
 import br.com.multiprodutora.ticketeria.domain.Status;
 import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import br.com.multiprodutora.ticketeria.domain.model.tenant.Tenant;
