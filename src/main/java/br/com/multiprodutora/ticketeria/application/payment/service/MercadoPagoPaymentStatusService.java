@@ -76,7 +76,7 @@ public class MercadoPagoPaymentStatusService {
                                     localPayment.setStatus(Status.CANCELED);
                                     break;
                                 default:
-                                    localPayment.setStatus(Status.UNKNOWN); //:TODO explique melhor: O que acontece se o status não for nenhum dos anteriores? O status do pagamento é mantido como pendente?
+                                    localPayment.setStatus(Status.PENDING); //:TODO explique melhor: O que acontece se o status não for nenhum dos anteriores? O status do pagamento é mantido como pendente?
                             }
 
                             paymentRepository.save(localPayment);

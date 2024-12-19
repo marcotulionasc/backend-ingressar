@@ -137,7 +137,7 @@ public class MercadoPagoController {
             BackUrls backUrls = new BackUrls();
             backUrls.setSuccess(backUrlSuccess)
                     .setFailure(backUrlFailure)
-                    .setPending(backUrlPending);
+                    .setPending(backUrlPending); // :TODO Cai o piqzin
 
             preference.setBackUrls(backUrls);
             preference.setAutoReturn(Preference.AutoReturn.approved);
