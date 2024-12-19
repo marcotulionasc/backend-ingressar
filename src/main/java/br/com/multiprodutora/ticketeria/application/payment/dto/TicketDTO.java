@@ -11,7 +11,7 @@ import lombok.ToString;
 @ToString
 public class TicketDTO {
 
-    @JsonAlias({"id", "ticketId"})
+    @JsonAlias({"id", "ticketId"}) //:TODO isso aqui é gambiarra, mas o front-end está mandando o id do ingresso com o nome de ticketId
     private String ticketId;
     private String name;
     Double price;
