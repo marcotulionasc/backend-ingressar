@@ -40,7 +40,7 @@ public class TicketUserController {
             logger.info("ID do usuário inválido: " + userId);
             return ResponseEntity.badRequest().body(Collections.emptyList());
         } catch (Exception e) {
-            logger.info("Erro ao buscar tickets para o usuário: " + userId);
+            logger.info("Erro ao buscar tickets do usuário: " + userId);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
     }

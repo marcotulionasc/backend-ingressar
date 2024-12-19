@@ -130,8 +130,10 @@ public class PaymentService {
     }
 
     public List<TicketPDFDTO> getTicketWebData(Long userId) {
-        var userIdString = userId.toString();
-        List<Payment> payments = paymentRepository.findByUserId(userIdString);
+        logger.info("Buscando dados de tickets para o usuário ID: " + userId);
+        String userIdString = userId.toString();
+        String statusAprovado = "APPROVED";
+        List<Payment> payments = paymentRepository.findPaymentsByStatusAndUserId(7, userIdString);
 
         if (payments.isEmpty()) {
             return Collections.emptyList();
@@ -146,21 +148,25 @@ public class PaymentService {
                         payment.getSelectedTicketsJson(),
                         new TypeReference<List<TicketDTO>>() {});
 
-                Long eventId = payment.getEvent();
-                Event event = eventRepository.findById(eventId)
-                        .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado com ID: " + eventId));
-                ConfigEvent configEvent = configEventRepository.findByEventId(eventId)
-                        .orElseThrow(() -> new IllegalArgumentException("Configuração do Evento não encontrada para o evento: " + eventId));
-
                 for (TicketDTO selectedTicket : selectedTickets) {
                     Ticket ticket = ticketRepository.findById(Long.valueOf(selectedTicket.getTicketId()))
                             .orElseThrow(() -> new IllegalArgumentException("Ingresso não encontrado com ID: " + selectedTicket.getTicketId()));
 
-                    Lot activeLot = lotRepository.findActiveLotByTicketId(ticket.getId())
-                            .orElseThrow(() -> new IllegalArgumentException("Lote ativo não encontrado para o ingresso com ID: " + ticket.getId()));
+                    // Buscar lote ativo com orderLot = 1
+                    Lot activeLot = lotRepository.findActiveLotByTicketIdAndOrderLot(ticket.getId(), 1)
+                            .orElseThrow(() -> new IllegalArgumentException("Lote ativo com orderLot=1 não encontrado para o ingresso com ID: " + ticket.getId()));
 
                     // Validar valores antes de criar o DTO
-                    String enderecoEvento = event.getAddress() != null ? event.getAddress().toString() : "Endereço não informado";
+                    String enderecoEvento = eventRepository.findById(activeLot.getEvent().getId())
+                            .map(Event::getAddress)
+                            .map(Object::toString)
+                            .orElse("Endereço não informado");
+
+                    Event event = eventRepository.findById(activeLot.getEvent().getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado com ID: " + activeLot.getEvent().getId()));
+
+                    ConfigEvent configEvent = configEventRepository.findByEventId(event.getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Configuração do Evento não encontrada para o evento: " + event.getId()));
 
                     TicketPDFDTO ticketPDFDTO = new TicketPDFDTO(
                             event.getTitleEvent(),                        // nomeEvento
@@ -184,8 +190,7 @@ public class PaymentService {
                 }
             } catch (Exception e) {
                 // Logar o erro e continuar processando os próximos pagamentos
-                System.err.println("Erro ao processar pagamento ID: " + payment.getId() + ". " + e.getMessage());
-                e.printStackTrace();
+                logger.info("Erro ao pegar o Ticket ID: " + payment.getId());
             }
         }
 

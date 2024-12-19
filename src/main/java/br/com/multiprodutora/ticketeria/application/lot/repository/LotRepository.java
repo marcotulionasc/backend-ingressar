@@ -25,4 +25,6 @@ public interface LotRepository extends JpaRepository<Lot, Long> {
     @Query("SELECT l FROM Lot l WHERE l.ticket.id = :ticketId AND l.isLotActive = br.com.multiprodutora.ticketeria.domain.Status.ACTIVE")
     Optional<Lot> findActiveLotByTicketId(Long ticketId);
 
+    Optional<Lot> findActiveLotByTicketIdAndOrderLot(Long ticketId, Integer orderLot);
+
 }
