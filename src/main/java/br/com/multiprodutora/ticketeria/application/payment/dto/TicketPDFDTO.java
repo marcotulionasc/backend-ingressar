@@ -1,5 +1,6 @@
 package br.com.multiprodutora.ticketeria.application.payment.dto;
 
+import br.com.multiprodutora.ticketeria.domain.model.address.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,23 +10,17 @@ import lombok.Setter;
 @Setter
 public class TicketPDFDTO {
 
-    private String nomeEvento;
-    private String dataEvento;
-    private String aberturaPortas;
-    private String localEvento;
-    private String enderecoEvento;
+    private String nameEvent;
+    private String titleEvent;
+    private String date;
+    private String local;
+    private Address address;
+    private String ticketId;
+    private String ticketName;
+    private Double ticketPrice;
+    private Integer ticketQuantity;
+    private String paidAt;
+    private String userName;
+    private String userEmail;
 
-    private Long idIngresso;
-    private String nomeIngresso;
-    private String areaIngresso;
-
-    private Long idLoteAtivo;
-    private String valorLote;
-    private int quantidadeLote;
-    private int taxaLote;
-
-    private String dataCompra;
-    private String nomeComprador;
-
-    private String textoNoIngresso;
 }
