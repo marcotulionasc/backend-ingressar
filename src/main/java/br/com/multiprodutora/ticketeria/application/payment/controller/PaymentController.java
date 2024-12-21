@@ -28,17 +28,6 @@ public class PaymentController {
     }
 
     @Transactional
-    @GetMapping("/{paymentId}/ticketdata")
-    public ResponseEntity<List<TicketPDFDTO>> getTicketPDFData(@PathVariable Long paymentId) {
-        try {
-            List<TicketPDFDTO> ticketPDFData = paymentService.getTicketPDFData(String.valueOf(paymentId));
-            return ResponseEntity.ok(ticketPDFData);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    @Transactional
     @GetMapping("/user/{userId}/ticketdata")
     public ResponseEntity<List<TicketPDFDTO>> getTicketWebData(@PathVariable Long userId) {
         try {
